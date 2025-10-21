@@ -2,11 +2,11 @@ import Header from '@/components/nav/Header'
 
 export default function MainLayout({ children }) {
   return (
-    <section className='max-h-screen overflow-hidden'>
+    <section className='max-h-screen'>
       <Header />
-      <div className='flex w-full overflow-y-scroll h-full px-5'>
+      <main className='container mx-auto '>
           {children}
-      </div>
+      </main>
     </section>
   )
 }

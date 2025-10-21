@@ -1,20 +1,26 @@
 'use client';
 import { useEffect, useRef, useState } from "react";
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
-import ToggleSwitch from "@/components/utils/ToggleSwitch";
+import { ToggleSwitch, NumberInput } from "@/components/common";
+import { getVideoConstraints } from "@/lib";
+import { HandIcon } from "@/utils/icons";
 
 export default function AlphabetHome() {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const [resolution, setResolution] = useState({ width: null, height: null });
-  const [handPresence, setHandPresence] = useState(null);
+  const [debug, setDebug] = useState(null);
 
-  const [showLandmarks, setShowLandmarks] = useState(false)
+  const [showLandmarks, setShowLandmarks] = useState(false);
   const showLandmarksRef = useRef(showLandmarks);
 
-  const [curretGesture, setCurrentGesture] = useState(null)
+  const [enableMultihands, setEnableMultihands] = useState(false);
+  const [numberOfHands, setNumberOfHands] = useState(1)
+
+  const [curretGesture, setCurrentGesture] = useState('');
+  const [currentGestureScore, setCurrentGestureScore] = useState('');
 
   useEffect(() => {
     showLandmarksRef.current = showLandmarks;
@@ -25,7 +31,6 @@ export default function AlphabetHome() {
     let gestureRecognizer;
     let animationFrameId;
 
-
     const drawLandmarks = (landmarksArray) => {
 
       const canvas = canvasRef.current;
@@ -35,58 +40,65 @@ export default function AlphabetHome() {
       ctx.fillStyle = 'red';
 
       landmarksArray.forEach(landmarks => {
-        landmarks.forEach((landmark, index) => {
-          const x = landmark.x * canvas.width;
+        landmarks.forEach((landmark) => {
+
+          // Fix the video proportions with the canvas to draw the landmarks points in the correct place
+          const videoRelativeWidth = canvas.height * video.videoWidth / video.videoHeight;
+          const diffX = (videoRelativeWidth - canvas.width) / 2
+
+          const x = landmark.x * videoRelativeWidth - diffX;
           const y = landmark.y * canvas.height;
 
           ctx.beginPath();
-          ctx.arc(x, y, 2, 0, 2 * Math.PI); // Draw a circle for each landmark
-          // ctx.fillText(index, x, y);
+          ctx.arc(x, y, 3, 0, 2 * Math.PI); // Draw a circle for each landmark
           ctx.fill();
 
-            // Conectar puntos específicos con líneas
-            const fingerConnections = [
-              [0, 1, 5, 9, 13, 17, 0],
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
-              [13, 14, 15, 16],
-              [17, 18, 19, 20],
-            ];
+          // Landmarks to connect
+          const fingerConnections = [
+            [0, 1, 5, 9, 13, 17, 0],  // Palm
+            [1, 2, 3, 4],             // Thumb
+            [5, 6, 7, 8],             // Index
+            [9, 10, 11, 12],          // Middle
+            [13, 14, 15, 16],         // Ring
+            [17, 18, 19, 20],         // Pinky
+          ];
 
-            ctx.strokeStyle = '#591da9'; // o cualquier color
-            ctx.lineWidth = 0.1;
+          ctx.strokeStyle = '#591da9'; // Purple
+          ctx.lineWidth = 0.2;
 
-            fingerConnections.forEach(connection => {
-              ctx.beginPath();
-              connection.forEach((index, i) => {
-                const x = landmarks[index].x * canvas.width;
-                const y = landmarks[index].y * canvas.height;
+          fingerConnections.forEach(connection => {
+            ctx.beginPath();
+            connection.forEach((index, i) => {
+              const x = landmarks[index].x * videoRelativeWidth - diffX;
+              const y = landmarks[index].y * canvas.height;
 
-                if (i === 0) {
-                  ctx.moveTo(x, y);
-                } else {
-                  ctx.lineTo(x, y);
-                }
-              });
-              ctx.stroke();
+              if (i === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
             });
+            ctx.stroke();
+          });
         });
       });
     };
 
-    const detectHands = () => {
-      if (videoRef.current && videoRef.current.readyState >= 2) {
-        const detections = gestureRecognizer.recognizeForVideo(videoRef.current, performance.now());
 
-        setHandPresence(detections.handednesses.length > 0);
+    const detectHands = () => {
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+
+      if (video && video.readyState >= 2) {
+        const detections = gestureRecognizer.recognizeForVideo(videoRef.current, performance.now());
 
         if (detections.gestures.length) {
           setCurrentGesture(detections.gestures[0][0].categoryName);
+          setCurrentGestureScore(detections.gestures[0][0].score)
         }
 
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Assuming detections.landmarks is an array of landmark objects
@@ -94,19 +106,20 @@ export default function AlphabetHome() {
           drawLandmarks(detections.landmarks);
         }
       }
+
+
       requestAnimationFrame(detectHands);
     };
 
 
-    const initializeHandDetection = async () => {
+    const initializeHandDetection = async (numberOfHands = 1) => {
       try {
         const vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
         );
-        gestureRecognizer = await GestureRecognizer.createFromOptions(
-          vision, {
+        gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
           baseOptions: { modelAssetPath: 'models/gesture_recognizer.task' },
-          numHands: 1,
+          numHands: numberOfHands,
           runningMode: "video"
         }
         );
@@ -116,20 +129,31 @@ export default function AlphabetHome() {
       }
     };
 
+
     const startWebcam = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+        const videoConstraints = getVideoConstraints();
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, facingMode: "user" } });
+
         videoRef.current.srcObject = stream;
-        const videoTrack = stream.getVideoTracks()[0];
-        const settings = videoTrack.getSettings();
-        console.log(settings)
-        setResolution({ width: settings.width, height: settings.height });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+
+          // videoRef.current.onloadedmetadata = () => {
+          //   setDebug(videoRef.current.videoWidth + "x" +
+          //     videoRef.current.videoHeight)
+          // };
+        }
 
         await initializeHandDetection();
       } catch (error) {
         console.error("Error accessing webcam:", error);
       }
     };
+
 
     startWebcam();
 
@@ -146,46 +170,83 @@ export default function AlphabetHome() {
     };
   }, []);
 
+  useEffect(() => {
+    const resizeCanvas = () => {
+      const container = containerRef.current;
+      const canvas = canvasRef.current;
+
+      if (container && canvas) {
+        const rect = container.getBoundingClientRect();
+
+        // Establece el tamaño físico del canvas (resolución)
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+
+        // Asegura que se vea bien
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+
+        // Opcional: redibujar algo
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+
+    // Inicial
+    resizeCanvas();
+
+    // También ajustar al redimensionar la ventana
+    window.addEventListener('resize', resizeCanvas);
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, []);
+
   return (
     <>
-      <div className="px-16 py-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex space-x-8">
+      <div className="px-8 md:px-20 py-8 flex flex-col lg:flex-row space-x-10 justify-between">
+            {/* <span>{debug}</span> */}
 
         {/* CAMERA */}
-        <div className="w-160 h-120 overflow-hidden relative bg-main-dark rounded-4xl">
+        <section ref={containerRef} className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark rounded-4xl">
           <video
-            className="absolute top-1/2 left-1/2 min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 object-cover"
+            className="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-4xl"
             ref={videoRef}
             autoPlay
             playsInline
           ></video>
-          <canvas className="absolute top-0 left-0 w-full h-full z-10" ref={canvasRef} style={{ backgroundColor: "transparent", width: "640px", height: "480px" }}></canvas>
-        </div>
+          <canvas className="absolute top-0 left-0 w-full h-full z-10" ref={canvasRef}></canvas>
+        </section>
 
 
         {/* RIGHT DIV, OPTIONS */}
-        <div className="flex flex-col w-72 pt-6">
+        <section className="flex flex-col pt-6 max-w-80 justify-center items-center self-center">
 
-          <span className="text-2xl font-semibold items-center self-center">Configuración</span>
+          <div className="flex px-4 space-x-2 items-center justify-between">
+            <HandIcon width="72" height="72" className="text-amethyst"/>
+            <span className="text-7xl font-semibold text-grape self-center ml-4">{labels_dict[curretGesture] || '—'}</span>
+            <span className="text-5xl font-semibold text-wisteria self-center ml-8">{Math.trunc(currentGestureScore * 100) + "%" || '-'}</span>
+          </div>
 
           {/* CONFIG OPTIONS */}
-          <div>
-            <div className="space-x-3 flex flex-row items-center my-4">
-              <ToggleSwitch checked={showLandmarks} setChecked={setShowLandmarks}/>
-              <span>Mostrar landmarks</span>
+          <div className="mt-10">
+            <div className="space-x-3 flex flex-row items-center justify-center my-4">
+              <ToggleSwitch checked={showLandmarks} setChecked={setShowLandmarks} />
+              <span className="text-xl">Mostrar landmarks</span>
+            </div>
+            {/* <div className="space-x-3 flex flex-row items-center my-4">
+              <ToggleSwitch checked={enableMultihands} setChecked={setEnableMultihands}/>
+              <span className="text-xl">Habilitar multimanos</span>
+              <NumberInput />
             </div>
             <div className="space-x-3 flex flex-row items-center my-4">
               <ToggleSwitch />
-              <span>Habilitar multimanos</span>
-            </div>
-            <div className="space-x-3 flex flex-row items-center my-4">
-              <ToggleSwitch />
-              <span>No me acuerdo</span>
-            </div>
+              <span className="text-xl">Completar palabras</span>
+            </div> */}
 
           </div>
 
-          <span className="text-4xl items-center">Letra {curretGesture && labels_dict[curretGesture]}</span>
-        </div>
+        </section>
 
 
 
@@ -193,23 +254,6 @@ export default function AlphabetHome() {
     </>
   )
 }
-
-
-function mapVideoToCanvasCover(xA, yA, videoWidth, videoHeight, canvasWidth, canvasHeight) {
-  // Escala como 'cover' en este caso: mayor de los dos ratios
-  const scale = Math.max(canvasWidth / videoWidth, canvasHeight / videoHeight);
-
-  // En este caso sabemos que solo hay offset en Y (alto)
-  const displayHeight = videoHeight * scale;
-  const offsetY = (canvasHeight - displayHeight) / 2;
-
-  // No hay offset horizontal porque el video cubre todo el ancho
-  const xB = xA * scale;
-  const yB = yA * scale + offsetY;
-
-  return { x: xB, y: yB };
-}
-
 
 
 const labels_dict = {
