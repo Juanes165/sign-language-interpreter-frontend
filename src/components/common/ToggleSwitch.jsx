@@ -5,7 +5,7 @@ export default function ToggleSwitch({ checked, setChecked }) {
   const toggle = () => setChecked(!checked);
 
   return (
-    <label className="relative inline-block w-[50px] h-[30px] cursor-pointer select-none">
+    <label className="relative inline-block w-[50px] min-w-[50px] max-w-[50px] h-[30px] min-h-[30px] max-h-[30px] cursor-pointer select-none">
       <input
         type="checkbox"
         checked={checked}
