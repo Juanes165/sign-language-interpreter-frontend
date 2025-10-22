@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
 import { ToggleSwitch, NumberInput } from "@/components/common";
 import { getVideoConstraints } from "@/lib";
-import { HandIcon } from "@/utils/icons";
+import { HandIcon, CameraIcon } from "@/utils/icons";
 
 export default function AlphabetHome() {
 
@@ -13,6 +13,8 @@ export default function AlphabetHome() {
 
   const [debug, setDebug] = useState(null);
 
+  const [loadingWebcam, setLoadingWebcam] = useState(true);
+
   const [showLandmarks, setShowLandmarks] = useState(false);
   const showLandmarksRef = useRef(showLandmarks);
 
@@ -20,7 +22,7 @@ export default function AlphabetHome() {
   const [numberOfHands, setNumberOfHands] = useState(1)
 
   const [curretGesture, setCurrentGesture] = useState('');
-  const [currentGestureScore, setCurrentGestureScore] = useState('');
+  const [currentGestureScore, setCurrentGestureScore] = useState(0);
 
   useEffect(() => {
     showLandmarksRef.current = showLandmarks;
@@ -98,6 +100,10 @@ export default function AlphabetHome() {
           setCurrentGesture(detections.gestures[0][0].categoryName);
           setCurrentGestureScore(detections.gestures[0][0].score)
         }
+        else {
+          setCurrentGesture('');
+          setCurrentGestureScore(1);
+        }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -142,10 +148,11 @@ export default function AlphabetHome() {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
 
-          // videoRef.current.onloadedmetadata = () => {
-          //   setDebug(videoRef.current.videoWidth + "x" +
-          //     videoRef.current.videoHeight)
-          // };
+          videoRef.current.oncanplay = () => {
+            setLoadingWebcam(false);
+            videoRef.current.play();
+          }
+
         }
 
         await initializeHandDetection();
@@ -204,28 +211,39 @@ export default function AlphabetHome() {
 
   return (
     <>
+      <div className="text-amethyst text-4xl md:text-5xl text-center w-full font-semibold mt-8 mb-2">INTERPRETADOR</div>
       <div className="px-8 md:px-20 py-8 flex flex-col lg:flex-row space-x-10 justify-between">
             {/* <span>{debug}</span> */}
 
         {/* CAMERA */}
         <section ref={containerRef} className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark rounded-4xl">
+          {loadingWebcam && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  text-platinum flex flex-col items-center">
+              <CameraIcon className="text-platinum w-40 h-40"/>
+              <span className="text-3xl text-center font-semibold">Cargando tu cámara</span>
+            </div>
+          )}
           <video
-            className="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-4xl"
+            className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-4xl`}
             ref={videoRef}
             autoPlay
             playsInline
-          ></video>
-          <canvas className="absolute top-0 left-0 w-full h-full z-10" ref={canvasRef}></canvas>
+          />
+          <canvas className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-0 left-0 w-full h-full z-10 rounded-4xl`} ref={canvasRef}></canvas>
         </section>
 
 
         {/* RIGHT DIV, OPTIONS */}
-        <section className="flex flex-col pt-6 max-w-80 justify-center items-center self-center">
+        <section className="flex flex-col w-full pt-6 max-w-80 justify-center items-center self-center">
 
           <div className="flex px-4 space-x-2 items-center justify-between">
             <HandIcon width="72" height="72" className="text-amethyst"/>
-            <span className="text-7xl font-semibold text-grape self-center ml-4">{labels_dict[curretGesture] || '—'}</span>
-            <span className="text-5xl font-semibold text-wisteria self-center ml-8">{Math.trunc(currentGestureScore * 100) + "%" || '-'}</span>
+            <div className="w-20 flex justify-center">
+              <span className="text-7xl font-semibold text-amethyst">{labels_dict[curretGesture] || '—'}</span>
+            </div>
+            <div className="w-32 flex justify-end">
+              <span className="text-5xl font-semibold text-wisteria self-center">{Math.trunc(currentGestureScore * 100) + "%" || '-'}</span>
+            </div>
           </div>
 
           {/* CONFIG OPTIONS */}
