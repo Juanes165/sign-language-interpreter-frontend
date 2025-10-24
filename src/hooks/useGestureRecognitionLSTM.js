@@ -181,12 +181,16 @@ export function useGestureRecognitionLSTM(options = {}) {
       const inputName = modelRef.current.inputs[0].name;
       
       console.log('🔍 Ejecutando modelo con input:', inputName);
+
+      console.log('🧠 Modelo:', {
+        inputs: model.inputs.map(i => i.name),
+        outputs: model.outputs.map(o => o.name)
+      });
       
       // Ejecutar SIN especificar el output name (dejar que TF.js lo resuelva)
-      const prediction = await modelRef.current.executeAsync(
-        { [inputName]: inputTensor }
-      );
-      
+      const prediction = model.predict(inputTensor);
+
+
       // Si executeAsync devuelve un array, tomar el primer tensor
       const outputTensor = Array.isArray(prediction) ? prediction[0] : prediction;
       const probabilities = await outputTensor.data();
