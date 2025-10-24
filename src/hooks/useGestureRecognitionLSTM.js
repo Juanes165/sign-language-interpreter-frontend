@@ -1,0 +1,429 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  extractKeypoints,
+  handDetected,
+  normalizeKeypoints,
+  MODEL_CONFIG,
+  WORDS_TEXT
+} from '@/lib/gestureRecognitionLSTM';
+
+/**
+ * Hook personalizado para reconocimiento de gestos con LSTM
+ * @param {Object} options - Opciones de configuración
+ * @returns {Object} Estado y funciones del reconocimiento
+ */
+export function useGestureRecognitionLSTM(options = {}) {
+  const {
+    threshold = MODEL_CONFIG.DEFAULT_THRESHOLD,
+    marginFrame = MODEL_CONFIG.MARGIN_FRAME,
+    delayFrames = MODEL_CONFIG.DELAY_FRAMES,
+    minLengthFrames = MODEL_CONFIG.MIN_LENGTH_FRAMES,
+    maxSentenceLength = 6,
+    onPrediction = null,
+    enableSpeech = false,
+  } = options;
+
+  // Referencias
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const holisticRef = useRef(null);
+  const cameraRef = useRef(null);
+  const modelRef = useRef(null);
+  const labelsRef = useRef([]);
+
+  // Estado de captura
+  const keypointsSequenceRef = useRef([]);
+  const countFrameRef = useRef(0);
+  const fixFramesRef = useRef(0);
+  const recordingRef = useRef(false);
+
+  // Estado React
+  const [isModelLoading, setIsModelLoading] = useState(true);
+  const [isHolisticReady, setIsHolisticReady] = useState(false);
+  const [isWebcamReady, setIsWebcamReady] = useState(false);
+  const [isVideoMounted, setIsVideoMounted] = useState(false);
+  const [currentPrediction, setCurrentPrediction] = useState(null);
+  const [sentence, setSentence] = useState([]);
+  const [status, setStatus] = useState('Inicializando...');
+  const [error, setError] = useState(null);
+
+  // Callback ref para detectar cuando el video está montado
+  const setVideoRef = useCallback((node) => {
+    videoRef.current = node;
+    if (node) {
+      console.log('✅ Video element montado en el DOM');
+      setIsVideoMounted(true);
+    } else {
+      console.log('❌ Video element desmontado');
+      setIsVideoMounted(false);
+    }
+  }, []);
+
+  /**
+   * Carga el modelo TFJS y las etiquetas
+   */
+  const loadModel = useCallback(async () => {
+    try {
+      setIsModelLoading(true);
+      setStatus('Cargando modelo LSTM...');
+
+      // Importar TensorFlow.js dinámicamente (solo en cliente)
+      const tf = await import('@tensorflow/tfjs');
+      
+      // Cargar modelo TensorFlow.js (GraphModel, no LayersModel)
+      // El modelo generado desde SavedModel es un GraphModel
+      const model = await tf.loadGraphModel('/models/lstm_gestos/model.json');
+      modelRef.current = model;
+
+      // Cargar etiquetas
+      const response = await fetch('/models/lstm_gestos/words.json');
+      const data = await response.json();
+      labelsRef.current = data.word_ids || [];
+
+      console.log('✅ Modelo LSTM cargado:', labelsRef.current);
+      console.log('✅ Input shape esperado:', model.inputs[0].shape);
+      console.log('📊 Model info:');
+      console.log('  - Inputs:', model.inputs.map(i => ({ name: i.name, shape: i.shape })));
+      console.log('  - Outputs:', model.outputs.map(o => ({ name: o.name, shape: o.shape })));
+      setIsModelLoading(false);
+      setStatus('Modelo listo');
+    } catch (err) {
+      console.error('❌ Error cargando modelo:', err);
+      setError('No se pudo cargar el modelo LSTM');
+      setIsModelLoading(false);
+    }
+  }, []);
+
+  /**
+   * Procesa los resultados de MediaPipe y captura keypoints
+   */
+  const onResults = useCallback((results) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Limpiar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dibujar video (opcional)
+    // ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Lógica de captura (igual a run_local_recognition.py)
+    const isHandPresent = handDetected(results);
+
+    if (isHandPresent || recordingRef.current) {
+      recordingRef.current = false;
+      countFrameRef.current += 1;
+
+      if (countFrameRef.current > marginFrame) {
+        const keyframe = extractKeypoints(results);
+        keypointsSequenceRef.current.push(keyframe);
+        setStatus('🔴 Capturando gesto...');
+      }
+    } else {
+      // No hay manos detectadas
+      if (countFrameRef.current >= minLengthFrames + marginFrame) {
+        fixFramesRef.current += 1;
+
+        if (fixFramesRef.current < delayFrames) {
+          recordingRef.current = true;
+          setStatus('🔴 Capturando gesto...');
+        } else {
+          // Tiempo de procesar la secuencia
+          processPrediction();
+        }
+      } else {
+        // Reset
+        resetCaptureState();
+        setStatus('✋ Listo para capturar');
+      }
+    }
+
+    // Dibujar landmarks (opcional)
+    // drawHolisticLandmarks(ctx, results, canvas.width, canvas.height);
+  }, [marginFrame, delayFrames, minLengthFrames, threshold]);
+
+  /**
+   * Procesa la predicción con el modelo LSTM
+   */
+  const processPrediction = useCallback(async () => {
+    if (!modelRef.current || keypointsSequenceRef.current.length === 0) {
+      resetCaptureState();
+      return;
+    }
+
+    try {
+      setStatus('🔍 Procesando...');
+
+      // Importar TensorFlow.js dinámicamente
+      const tf = await import('@tensorflow/tfjs');
+
+      // Recortar frames del margen y delay
+      let sequence = keypointsSequenceRef.current;
+      const trimAmount = marginFrame + delayFrames;
+      if (trimAmount > 0 && sequence.length > trimAmount) {
+        sequence = sequence.slice(0, -trimAmount);
+      }
+
+      // Normalizar a 15 frames
+      const normalized = normalizeKeypoints(sequence, MODEL_CONFIG.FRAMES);
+
+      // Convertir a tensor [1, 15, 1662]
+      // GraphModel requiere que el input sea un tensor con la forma correcta
+      const sequenceData = normalized.map(frame => Array.from(frame));
+      console.log('➡️ Input tensor data shape:', [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
+      const inputTensor = tf.tensor3d([sequenceData], [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
+
+      // Predicción con GraphModel usando executeAsync
+      // El modelo SavedModel requiere executeAsync() para operaciones dinámicas (LSTM)
+      // NO especificar outputs para que TF.js use el output por defecto del modelo
+      const inputName = modelRef.current.inputs[0].name;
+      
+      console.log('🔍 Ejecutando modelo con input:', inputName);
+      
+      // Ejecutar SIN especificar el output name (dejar que TF.js lo resuelva)
+      const prediction = await modelRef.current.executeAsync(
+        { [inputName]: inputTensor }
+      );
+      
+      // Si executeAsync devuelve un array, tomar el primer tensor
+      const outputTensor = Array.isArray(prediction) ? prediction[0] : prediction;
+      const probabilities = await outputTensor.data();
+      
+      // Limpiar tensores
+      inputTensor.dispose();
+      outputTensor.dispose();
+      if (Array.isArray(prediction) && prediction.length > 1) {
+        prediction.slice(1).forEach(t => t.dispose());
+      }
+
+      // Obtener clase predicha
+      const maxIdx = probabilities.indexOf(Math.max(...probabilities));
+      const confidence = probabilities[maxIdx];
+
+      if (confidence > threshold) {
+        const label = labelsRef.current[maxIdx];
+        const wordId = label.split('-')[0]; // Remover sufijos como '-der'
+        const spokenText = WORDS_TEXT[wordId] || wordId;
+
+        const predictionResult = {
+          label,
+          wordId,
+          spokenText,
+          confidence: confidence.toFixed(2),
+        };
+
+        setCurrentPrediction(predictionResult);
+
+        // Actualizar frase
+        setSentence(prev => {
+          const newSentence = [spokenText, ...prev];
+          return newSentence.slice(0, maxSentenceLength);
+        });
+
+        // Callback opcional
+        if (onPrediction) {
+          onPrediction(predictionResult);
+        }
+
+        // Speech synthesis (opcional)
+        if (enableSpeech && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(spokenText);
+          utterance.lang = 'es-ES';
+          window.speechSynthesis.speak(utterance);
+        }
+
+        console.log(`✅ Predicción: ${label} (${confidence.toFixed(2)})`);
+      }
+    } catch (err) {
+      console.error('Error en predicción:', err);
+    } finally {
+      resetCaptureState();
+    }
+  }, [threshold, marginFrame, delayFrames, maxSentenceLength, onPrediction, enableSpeech]);
+
+  /**
+   * Resetea el estado de captura
+   */
+  const resetCaptureState = useCallback(() => {
+    keypointsSequenceRef.current = [];
+    countFrameRef.current = 0;
+    fixFramesRef.current = 0;
+    recordingRef.current = false;
+  }, []);
+
+  /**
+   * Inicializa MediaPipe Holistic
+   */
+  const initializeHolistic = useCallback(async () => {
+    try {
+      setStatus('Inicializando MediaPipe Holistic...');
+      console.log('🔧 Inicializando MediaPipe Holistic...');
+
+      // Importar MediaPipe dinámicamente (solo en cliente)
+      const { Holistic } = await import('@mediapipe/holistic');
+      console.log('✅ MediaPipe Holistic importado');
+
+      const holistic = new Holistic({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`;
+        }
+      });
+
+      holistic.setOptions({
+        modelComplexity: 1,
+        smoothLandmarks: true,
+        enableSegmentation: false,
+        smoothSegmentation: false,
+        refineFaceLandmarks: false,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+
+      holistic.onResults(onResults);
+      holisticRef.current = holistic;
+
+      console.log('✅ MediaPipe Holistic inicializado correctamente');
+      setIsHolisticReady(true);
+      setStatus('MediaPipe listo');
+    } catch (err) {
+      console.error('❌ Error inicializando Holistic:', err);
+      setError('Error al inicializar MediaPipe Holistic');
+    }
+  }, [onResults]);
+
+  /**
+   * Inicia la cámara usando getUserMedia nativo
+   */
+  const startCamera = useCallback(async () => {
+    console.log('📷 startCamera llamado');
+    console.log('📷 videoRef.current:', !!videoRef.current);
+    console.log('📷 holisticRef.current:', !!holisticRef.current);
+    
+    if (!videoRef.current || !holisticRef.current) {
+      console.error('❌ Referencias no disponibles');
+      return;
+    }
+
+    try {
+      setStatus('Solicitando permisos de cámara...');
+      console.log('📷 Solicitando acceso a cámara...');
+
+      // Usar getUserMedia nativo en lugar de @mediapipe/camera_utils
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 },
+        audio: false
+      });
+
+      console.log('✅ Stream de cámara obtenido');
+
+      const video = videoRef.current;
+      video.srcObject = stream;
+      video.addEventListener('loadeddata', async () => {
+        console.log('✅ Video cargado, iniciando procesamiento...');
+        setIsWebcamReady(true);
+        setStatus('✋ Listo para capturar');
+
+        // Procesar frames manualmente
+        const processFrame = async () => {
+          if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
+            await holisticRef.current.send({ image: video });
+          }
+          if (cameraRef.current) {
+            requestAnimationFrame(processFrame);
+          }
+        };
+
+        // Iniciar el loop de procesamiento
+        cameraRef.current = { stream, stop: () => stream.getTracks().forEach(track => track.stop()) };
+        requestAnimationFrame(processFrame);
+      });
+
+      console.log('📷 Reproduciendo video...');
+      await video.play();
+    } catch (err) {
+      console.error('❌ Error iniciando cámara:', err);
+      if (err.name === 'NotAllowedError') {
+        setError('Permisos de cámara denegados. Por favor, permite el acceso a la cámara.');
+      } else if (err.name === 'NotFoundError') {
+        setError('No se encontró ninguna cámara en el dispositivo.');
+      } else {
+        setError('No se pudo acceder a la cámara: ' + err.message);
+      }
+    }
+  }, []);
+
+  /**
+   * Limpia la frase acumulada
+   */
+  const clearSentence = useCallback(() => {
+    setSentence([]);
+    setCurrentPrediction(null);
+  }, []);
+
+  /**
+   * Efecto de inicialización
+   */
+  useEffect(() => {
+    // Solo ejecutar en el cliente
+    if (typeof window === 'undefined') return;
+
+    const initialize = async () => {
+      await loadModel();
+      await initializeHolistic();
+    };
+
+    initialize();
+
+    // Cleanup
+    return () => {
+      if (cameraRef.current) {
+        cameraRef.current.stop();
+      }
+      if (holisticRef.current) {
+        holisticRef.current.close();
+      }
+      if (modelRef.current) {
+        modelRef.current.dispose();
+      }
+    };
+  }, [loadModel, initializeHolistic]);
+
+  // Iniciar cámara cuando todo esté listo
+  useEffect(() => {
+    console.log('📷 Effect check:', {
+      isModelLoading,
+      isHolisticReady,
+      hasHolistic: !!holisticRef.current,
+      isVideoMounted,
+      hasVideo: !!videoRef.current,
+      isWebcamReady
+    });
+    
+    if (!isModelLoading && isHolisticReady && isVideoMounted && videoRef.current && !isWebcamReady) {
+      console.log('📷 ✅ Todas las condiciones cumplidas, iniciando cámara...');
+      startCamera();
+    } else {
+      console.log('📷 ⏳ Esperando condiciones:', {
+        needsModel: isModelLoading,
+        needsHolistic: !isHolisticReady,
+        needsVideoMounted: !isVideoMounted,
+        needsVideoRef: !videoRef.current,
+        alreadyReady: isWebcamReady
+      });
+    }
+  }, [isModelLoading, isHolisticReady, isVideoMounted, isWebcamReady, startCamera]);
+
+  return {
+    videoRef: setVideoRef,  // Devuelve el callback ref
+    canvasRef,
+    isModelLoading,
+    isWebcamReady,
+    currentPrediction,
+    sentence,
+    status,
+    error,
+    clearSentence,
+  };
+}
