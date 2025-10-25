@@ -69,10 +69,10 @@ export function useGestureRecognitionLSTM(options = {}) {
 
       // Importar TensorFlow.js dinámicamente (solo en cliente)
       const tf = await import('@tensorflow/tfjs');
-      
+      console.log("XD")
       // Cargar modelo TensorFlow.js (GraphModel, no LayersModel)
       // El modelo generado desde SavedModel es un GraphModel
-      const model = await tf.loadGraphModel('/models/lstm_gestos/model.json');
+      const model = await tf.loadLayersModel('/models/lstm_gestos/model.json');
       modelRef.current = model;
 
       // Cargar etiquetas
@@ -175,23 +175,11 @@ export function useGestureRecognitionLSTM(options = {}) {
       console.log('➡️ Input tensor data shape:', [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
       const inputTensor = tf.tensor3d([sequenceData], [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
 
-      // Predicción con GraphModel usando executeAsync
-      // El modelo SavedModel requiere executeAsync() para operaciones dinámicas (LSTM)
-      // NO especificar outputs para que TF.js use el output por defecto del modelo
-      const inputName = modelRef.current.inputs[0].name;
+      // Predicción con GraphModel usando execute()
+      // Para GraphModel con LSTM, usar execute() en lugar de executeAsync()
+      const prediction = modelRef.current.predict(inputTensor);
       
-      console.log('🔍 Ejecutando modelo con input:', inputName);
-
-      console.log('🧠 Modelo:', {
-        inputs: model.inputs.map(i => i.name),
-        outputs: model.outputs.map(o => o.name)
-      });
-      
-      // Ejecutar SIN especificar el output name (dejar que TF.js lo resuelva)
-      const prediction = model.predict(inputTensor);
-
-
-      // Si executeAsync devuelve un array, tomar el primer tensor
+      // Si execute devuelve un array, tomar el primer tensor
       const outputTensor = Array.isArray(prediction) ? prediction[0] : prediction;
       const probabilities = await outputTensor.data();
       
@@ -394,16 +382,16 @@ export function useGestureRecognitionLSTM(options = {}) {
     };
   }, [loadModel, initializeHolistic]);
 
-  // Iniciar cámara cuando todo esté listo
+  // // Iniciar cámara cuando todo esté listo
   useEffect(() => {
-    console.log('📷 Effect check:', {
-      isModelLoading,
-      isHolisticReady,
-      hasHolistic: !!holisticRef.current,
-      isVideoMounted,
-      hasVideo: !!videoRef.current,
-      isWebcamReady
-    });
+    // console.log('📷 Effect check:', {
+    //   isModelLoading,
+    //   isHolisticReady,
+    //   hasHolistic: !!holisticRef.current,
+    //   isVideoMounted,
+    //   hasVideo: !!videoRef.current,
+    //   isWebcamReady
+    // });
     
     if (!isModelLoading && isHolisticReady && isVideoMounted && videoRef.current && !isWebcamReady) {
       console.log('📷 ✅ Todas las condiciones cumplidas, iniciando cámara...');
