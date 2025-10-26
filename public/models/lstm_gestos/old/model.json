@@ -51,7 +51,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.0017
+                "l2": 0.01
               }
             },
             "recurrent_regularizer": null,
@@ -73,7 +73,7 @@
         {
           "class_name": "Dropout",
           "config": {
-            "rate": 0.4,
+            "rate": 0.5,
             "noise_shape": null,
             "seed": null,
             "name": "dropout_Dropout1",
@@ -146,7 +146,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.0017
+                "l2": 0.001
               }
             },
             "recurrent_regularizer": null,
@@ -168,7 +168,7 @@
         {
           "class_name": "Dropout",
           "config": {
-            "rate": 0.4,
+            "rate": 0.5,
             "noise_shape": null,
             "seed": null,
             "name": "dropout_Dropout2",
@@ -230,7 +230,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.0017
+                "l2": 0.001
               }
             },
             "bias_regularizer": null,
@@ -244,7 +244,7 @@
         {
           "class_name": "Dropout",
           "config": {
-            "rate": 0.4,
+            "rate": 0.5,
             "noise_shape": null,
             "seed": null,
             "name": "dropout_Dropout3",
@@ -254,7 +254,41 @@
         {
           "class_name": "Dense",
           "config": {
-            "units": 6,
+            "units": 64,
+            "activation": "relu",
+            "use_bias": true,
+            "kernel_initializer": {
+              "class_name": "VarianceScaling",
+              "config": {
+                "scale": 1,
+                "mode": "fan_avg",
+                "distribution": "normal",
+                "seed": null
+              }
+            },
+            "bias_initializer": {
+              "class_name": "Zeros",
+              "config": {}
+            },
+            "kernel_regularizer": {
+              "class_name": "L1L2",
+              "config": {
+                "l1": 0,
+                "l2": 0.001
+              }
+            },
+            "bias_regularizer": null,
+            "activity_regularizer": null,
+            "kernel_constraint": null,
+            "bias_constraint": null,
+            "name": "dense_Dense2",
+            "trainable": true
+          }
+        },
+        {
+          "class_name": "Dense",
+          "config": {
+            "units": 3,
             "activation": "softmax",
             "use_bias": true,
             "kernel_initializer": {
@@ -275,7 +309,7 @@
             "activity_regularizer": null,
             "kernel_constraint": null,
             "bias_constraint": null,
-            "name": "dense_Dense2",
+            "name": "dense_Dense3",
             "trainable": true
           }
         }
@@ -383,14 +417,29 @@
           "name": "dense_Dense2/kernel",
           "shape": [
             64,
-            6
+            64
           ],
           "dtype": "float32"
         },
         {
           "name": "dense_Dense2/bias",
           "shape": [
-            6
+            64
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "dense_Dense3/kernel",
+          "shape": [
+            64,
+            3
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "dense_Dense3/bias",
+          "shape": [
+            3
           ],
           "dtype": "float32"
         },

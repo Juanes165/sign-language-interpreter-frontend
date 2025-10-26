@@ -187,6 +187,8 @@ export const WORDS_TEXT = {
   "bien": "Bien",
   "hola": "Hola",
   "como": "Cómo",
+  "comoestas": "¿Cómo estás?",
   "dias": "Buenos días",
+  "minombrees": "Mi nombre es",
   "paz": "Paz",
 };
