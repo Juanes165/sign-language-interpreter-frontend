@@ -1,229 +1,173 @@
-# 🤟 Intérprete de Lengua de Señas
+# 🌐 Sign Language Interpreter - Frontend
 
-Aplicación web en tiempo real para interpretación de lengua de señas utilizando **MediaPipe** y **TensorFlow.js**.
+Sistema web de reconocimiento de gestos en lengua de señas con contribución colaborativa.
 
-## 🌟 Características
+---
 
-### 📝 Reconocimiento de Alfabeto (`/alphabet`)
-- Detección de letras individuales A-Z + Ñ
-- Reconocimiento instantáneo frame por frame
-- Modelo ligero de MediaPipe Gesture Recognizer
-- 27 clases de gestos estáticos
+## 📚 Documentación
 
-### 🎬 Reconocimiento de Gestos Dinámicos (`/gestures`)
-- **NUEVO**: Interpretación de palabras completas
-- Captura secuencias temporales de 15 frames
-- Modelo LSTM entrenado personalizado
-- MediaPipe Holistic (pose + cara + manos)
-- Acumulación de frases de hasta 6 palabras
-- Soporte para Text-to-Speech (opcional)
+**3 guías esenciales organizadas en `docs/`:**
+
+1. **[Arquitectura del Sistema](docs/01_ARQUITECTURA_SISTEMA.md)** - Visión técnica completa ⚙️
+2. **[Guía de Configuración](docs/02_GUIA_CONFIGURACION.md)** - Setup y configuración 🔧
+3. **[Guía de Usuario](docs/03_GUIA_USUARIO.md)** - Cómo usar y contribuir 👤
+
+---
 
 ## 🚀 Inicio Rápido
 
-### Instalación
+### **Instalación**
 
 ```bash
-# Clonar el repositorio
-git clone [URL_DEL_REPO]
+# Clonar repositorio
+git clone https://github.com/tu-usuario/sign-language-interpreter-frontend.git
 cd sign-language-interpreter-frontend
 
 # Instalar dependencias
 npm install
 
-# Verificar integración LSTM
-node verify-lstm-integration.js
-
-# Iniciar servidor de desarrollo
+# Ejecutar en desarrollo
 npm run dev
 ```
 
-### Acceder a la aplicación
+Abrir: [http://localhost:3000](http://localhost:3000)
 
-- **Página principal**: http://localhost:3000
-- **Alfabeto**: http://localhost:3000/alphabet
-- **Gestos dinámicos**: http://localhost:3000/gestures
+---
 
-## 🏗️ Tecnologías
+### **Copiar Modelo Entrenado**
 
-- **Framework**: [Next.js 15](https://nextjs.org) (React 19)
-- **Visión por computadora**: 
-  - [MediaPipe Gesture Recognizer](https://developers.google.com/mediapipe/solutions/vision/gesture_recognizer) (alfabeto)
-  - [MediaPipe Holistic](https://google.github.io/mediapipe/solutions/holistic) (gestos dinámicos)
-- **Machine Learning**: [TensorFlow.js](https://www.tensorflow.org/js)
-- **Estilos**: [Tailwind CSS 4](https://tailwindcss.com)
-- **Lenguaje**: JavaScript (ES6+)
+```bash
+# Desde el backend (gesto_releasev1)
+cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/lstm_gestos/
+
+# Verificar archivos
+ls public/models/lstm_gestos/
+# Debe mostrar: model.json, weights.bin, words.json
+```
+
+---
+
+## 🎯 Características
+
+### **Reconocimiento de Gestos** (`/gestures`)
+- 🎥 Reconocimiento en tiempo real
+- 🧠 Modelo LSTM con TensorFlow.js
+- 📊 18 gestos disponibles
+- 💯 Indicador de confianza
+
+### **Contribución Colaborativa** (`/contribute`)
+- 🤝 Captura de nuevos gestos
+- 📈 Estadísticas de usuario
+- ☁️ Sincronización automática con Google Drive
+- 🎯 18 gestos objetivo
+
+### **Abecedario** (`/alphabet`)
+- 📚 Señas estáticas (A-Z)
+- 🖼️ Imágenes de referencia
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
 sign-language-interpreter-frontend/
-├── public/
-│   └── models/
-│       ├── gesture_recognizer.task    # Modelo de alfabeto (MediaPipe)
-│       └── lstm_gestos/               # Modelo de gestos dinámicos (TFJS)
-│           ├── model.json
-│           ├── group1-shard1of1.bin
-│           └── words.json
+├── docs/                          # 📚 Documentación
+│   ├── 01_ARQUITECTURA_SISTEMA.md
+│   ├── 02_GUIA_CONFIGURACION.md
+│   └── 03_GUIA_USUARIO.md
+│
 ├── src/
 │   ├── app/
 │   │   ├── (main)/
-│   │   │   ├── alphabet/page.js       # Página de alfabeto
-│   │   │   └── gestures/page.js       # 🆕 Página de gestos dinámicos
-│   │   ├── layout.js
-│   │   └── page.js
-│   ├── components/
-│   │   ├── common/                    # Componentes reutilizables
-│   │   └── nav/                       # Navegación
-│   ├── hooks/
-│   │   └── useGestureRecognitionLSTM.js  # 🆕 Hook para LSTM
-│   ├── lib/
-│   │   ├── gestureRecognitionLSTM.js     # 🆕 Utilidades LSTM
-│   │   └── getVideoConstraints.js
-│   └── utils/
-│       └── icons.js
-├── GESTOS_DINAMICOS.md               # 🆕 Documentación detallada LSTM
-├── GUIA_RAPIDA.md                    # 🆕 Guía de uso rápido
-└── verify-lstm-integration.js        # 🆕 Script de verificación
+│   │   │   ├── gestures/          # Reconocimiento
+│   │   │   ├── contribute/        # Contribución
+│   │   │   └── alphabet/          # Abecedario
+│   │   └── api/gestures/          # API Routes
+│   │
+│   ├── components/                # Componentes React
+│   ├── hooks/                     # Custom hooks
+│   └── lib/                       # Utilidades
+│
+├── public/
+│   └── models/lstm_gestos/        # Modelo LSTM
+│       ├── model.json
+│       ├── weights.bin
+│       └── words.json
+│
+├── unavoz-bb3744af7f68.json       # Credenciales Google Drive
+└── package.json
 ```
-
-## 🎯 Modelos Disponibles
-
-### 1. Alfabeto (MediaPipe Task)
-- **Archivo**: `public/models/gesture_recognizer.task`
-- **Tipo**: Gestos estáticos
-- **Clases**: 27 (A-Z + Ñ)
-- **Tamaño**: ~10 MB
-- **Entrada**: 21 keypoints × 2 manos
-
-### 2. Gestos Dinámicos (LSTM)
-- **Archivos**: `public/models/lstm_gestos/`
-- **Tipo**: Secuencias temporales
-- **Clases**: 3 (hola, dias, paz)
-- **Tamaño**: ~2 MB
-- **Entrada**: 15 frames × 1662 keypoints
-- **Arquitectura**: LSTM(64) → LSTM(128) → Dense(64) → Dense(3)
-
-## 📚 Documentación
-
-- **[GESTOS_DINAMICOS.md](./GESTOS_DINAMICOS.md)**: Documentación técnica completa del sistema LSTM
-- **[GUIA_RAPIDA.md](./GUIA_RAPIDA.md)**: Guía de inicio rápido y solución de problemas
-
-## 🔧 Configuración
-
-### Ajustar sensibilidad del modelo LSTM
-
-Edita `src/app/(main)/gestures/page.js`:
-
-```javascript
-const { ... } = useGestureRecognitionLSTM({
-  threshold: 0.7,           // Confianza mínima (0.5-0.9)
-  marginFrame: 1,           // Frames a ignorar al inicio
-  delayFrames: 3,           // Frames extra para capturar movimiento
-  maxSentenceLength: 6,     // Palabras máximas en frase
-  enableSpeech: false,      // Activar Text-to-Speech
-});
-```
-
-## 🐛 Solución de Problemas
-
-### Verificar integridad del proyecto
-```bash
-node verify-lstm-integration.js
-```
-
-### La cámara no funciona
-- Verifica permisos del navegador
-- Usa HTTPS o localhost
-- Cierra otras apps que usen la cámara
-
-### El modelo no carga
-```bash
-# Verificar archivos del modelo
-ls public/models/lstm_gestos/
-
-# Si faltan, copiar desde el proyecto Python:
-# (Ajusta las rutas según tu configuración)
-cp -r ../Tesis/gesto_releasev1/models/modelo_tfjs/* public/models/lstm_gestos/
-```
-
-## 🧪 Testing
-
-```bash
-# Verificar instalación
-node verify-lstm-integration.js
-
-# Iniciar en modo desarrollo
-npm run dev
-
-# Build para producción
-npm run build
-npm start
-```
-
-## 📊 Comparativa: Alfabeto vs Gestos Dinámicos
-
-| Aspecto | Alfabeto | Gestos Dinámicos |
-|---------|----------|------------------|
-| Tipo | Estático | Temporal |
-| Clases | 27 letras | 3 palabras (expandible) |
-| Latencia | Instantánea | 1-2 segundos |
-| Keypoints | 42 (manos) | 1662 (cuerpo completo) |
-| Modelo | MediaPipe Task | LSTM (TensorFlow.js) |
-| Uso | Deletreo | Palabras completas |
-
-## 🎨 Personalización
-
-### Agregar más gestos al modelo LSTM
-
-1. **Capturar nuevas secuencias** (en el proyecto Python):
-```bash
-cd ../Tesis/gesto_releasev1/src
-python capture_sequences.py
-```
-
-2. **Re-entrenar el modelo**:
-```bash
-python train_lstm_actions.py
-```
-
-3. **Convertir a TensorFlow.js**:
-```bash
-python fix_and_convert_tfjs.py
-```
-
-4. **Copiar al frontend**:
-```bash
-cp -r ../models/modelo_tfjs/* ../../sign-language-interpreter-frontend/public/models/lstm_gestos/
-```
-
-## 📱 Compatibilidad
-
-- ✅ Chrome 90+ (recomendado)
-- ✅ Firefox 88+
-- ✅ Edge 90+
-- ✅ Safari 14+
-- ⚠️ Dispositivos móviles (rendimiento variable)
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto es parte de una tesis de investigación.
-
-## 🙏 Agradecimientos
-
-- [MediaPipe](https://mediapipe.dev) por las herramientas de visión por computadora
-- [TensorFlow.js](https://www.tensorflow.org/js) por permitir ML en el navegador
-- [Next.js](https://nextjs.org) por el framework
 
 ---
 
-**Desarrollado con ❤️ para hacer la lengua de señas más accesible**
+## 🔧 Configuración de Google Drive
+
+### **1. Obtener Credenciales**
+- Crear Service Account en Google Cloud Console
+- Descargar credenciales como JSON
+- Copiar a la raíz del proyecto: `unavoz-bb3744af7f68.json`
+
+### **2. Compartir Carpeta**
+- Crear carpeta en Google Drive
+- Compartir con: `unavoz@unavoz.iam.gserviceaccount.com`
+- Permisos: **Editor**
+
+### **3. Configurar Folder ID**
+Editar `src/app/api/gestures/upload-to-drive/route.js`:
+
+```javascript
+const folderId = 'TU_FOLDER_ID_AQUI';
+```
+
+**[Ver guía completa →](docs/02_GUIA_CONFIGURACION.md#paso-3-configurar-google-drive-opcional)**
+
+---
+
+## 🎨 Tecnologías
+
+- **Framework:** Next.js 15
+- **UI:** React 19 + Tailwind CSS
+- **ML:** TensorFlow.js
+- **Computer Vision:** MediaPipe Holistic
+- **Cloud:** Google Drive API
+
+---
+
+## 📦 Comandos Disponibles
+
+```bash
+npm run dev      # Desarrollo (http://localhost:3000)
+npm run build    # Build para producción
+npm run start    # Iniciar producción
+npm run lint     # Linter
+```
+
+---
+
+## 🔗 Proyecto Relacionado
+
+**Backend (Entrenamiento):**  
+[gesto_releasev1](../gesto_releasev1/)
+- Captura de datos con Python
+- Entrenamiento del modelo LSTM
+- Conversión a TensorFlow.js
+
+---
+
+## 📖 Documentación Completa
+
+| Documento | Descripción |
+|-----------|-------------|
+| [Arquitectura](docs/01_ARQUITECTURA_SISTEMA.md) | Visión técnica del sistema |
+| [Configuración](docs/02_GUIA_CONFIGURACION.md) | Setup completo |
+| [Usuario](docs/03_GUIA_USUARIO.md) | Cómo usar el sistema |
+
+---
+
+## 📝 Licencia
+
+[Especificar licencia aquí]
+
+---
+
+**🎯 Sistema web de reconocimiento de gestos con contribución colaborativa**

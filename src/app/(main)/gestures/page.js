@@ -1,8 +1,12 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useGestureRecognitionLSTM } from '@/hooks/useGestureRecognitionLSTM';
 import { CameraIcon } from '@/utils/icons';
 
 export default function GesturesPage() {
+  const [availableGestures, setAvailableGestures] = useState([]);
+  const [isLoadingGestures, setIsLoadingGestures] = useState(true);
+  
   const {
     videoRef,
     canvasRef,
@@ -23,6 +27,27 @@ export default function GesturesPage() {
       console.log('Nueva predicción:', prediction);
     }
   });
+
+  // Cargar gestos dinámicamente desde el modelo
+  useEffect(() => {
+    async function loadGestures() {
+      try {
+        const response = await fetch('/models/lstm_gestos/words.json');
+        const data = await response.json();
+        setAvailableGestures(data.word_ids || ['hola', 'bien', 'adios', 'como-estas']);
+        
+        console.log('✅ Gestos cargados:', data.word_ids);
+      } catch (error) {
+        console.error('Error cargando gestos:', error);
+        // Fallback a gestos por defecto
+        setAvailableGestures(['hola', 'bien', 'adios', 'como-estas']);
+      } finally {
+        setIsLoadingGestures(false);
+      }
+    }
+    
+    loadGestures();
+  }, []);
 
   return (
     <>
@@ -101,14 +126,45 @@ export default function GesturesPage() {
               Última Predicción
             </h3>
             {currentPrediction ? (
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-4">
                 <p className="text-platinum text-5xl font-bold">
                   {currentPrediction.spokenText}
                 </p>
                 <p className="text-wisteria text-3xl">
                   {(currentPrediction.confidence * 100).toFixed(0)}%
                 </p>
-                <p className="text-gray-400 text-sm">
+                
+                {/* Barra de progreso de confianza */}
+                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${
+                      currentPrediction.confidence > 0.8 ? 'bg-green-500' :
+                      currentPrediction.confidence > 0.6 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${(currentPrediction.confidence * 100)}%` }}
+                  />
+                </div>
+                
+                {/* Indicador de confianza por color */}
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  {currentPrediction.confidence > 0.8 && (
+                    <span className="bg-green-500 bg-opacity-20 text-green-400 px-3 py-1 rounded-full">
+                      ✓ Alta confianza
+                    </span>
+                  )}
+                  {currentPrediction.confidence > 0.6 && currentPrediction.confidence <= 0.8 && (
+                    <span className="bg-yellow-500 bg-opacity-20 text-yellow-400 px-3 py-1 rounded-full">
+                      ⚠ Media confianza
+                    </span>
+                  )}
+                  {currentPrediction.confidence <= 0.6 && (
+                    <span className="bg-red-500 bg-opacity-20 text-red-400 px-3 py-1 rounded-full">
+                      ✗ Baja confianza
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-gray-400 text-xs">
                   ID: {currentPrediction.label}
                 </p>
               </div>
@@ -158,12 +214,20 @@ export default function GesturesPage() {
               📋 Instrucciones
             </h3>
             <ul className="text-platinum text-sm space-y-2 list-disc list-inside">
-              <li>Colócate frente a la cámara</li>
-              <li>Realiza el gesto de señas</li>
-              <li>Mantén el gesto hasta ver "Capturando..."</li>
-              <li>Baja las manos para procesar</li>
-              <li>La palabra aparecerá en la frase</li>
+              <li>Colócate frente a la cámara con buena iluminación</li>
+              <li>Realiza el gesto de señas de forma clara</li>
+              <li>Mantén el gesto hasta ver &quot;Capturando...&quot;</li>
+              <li>Baja las manos para procesar el gesto</li>
+              <li>La palabra aparecerá en la frase acumulada</li>
+              <li>Usa &quot;Limpiar&quot; para resetear la frase</li>
             </ul>
+            
+            {/* Indicador de calidad de iluminación */}
+            <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
+              <p className="text-blue-200 text-xs">
+                💡 <strong>Tip:</strong> Asegúrate de tener buena iluminación para mejor reconocimiento
+              </p>
+            </div>
           </div>
 
           {/* Gestos disponibles */}
@@ -171,20 +235,26 @@ export default function GesturesPage() {
             <h3 className="text-amethyst text-xl font-bold mb-3">
               ✋ Gestos Disponibles
             </h3>
-            <div className="grid grid-cols-2 gap-2 text-platinum text-sm">
-              <div className="bg-wisteria bg-opacity-20 px-3 py-2 rounded-lg">
-                👋 Hola
+            {isLoadingGestures ? (
+              <p className="text-gray-400 text-center">Cargando gestos...</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-platinum text-sm">
+                {availableGestures.length > 0 ? (
+                  availableGestures.slice(0, 12).map((gesture, idx) => (
+                    <div key={`${gesture}-${idx}`} className="bg-wisteria bg-opacity-20 px-3 py-2 rounded-lg">
+                      {gesture.charAt(0).toUpperCase() + gesture.slice(1).replace(/-/g, ' ')}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-center">No hay gestos disponibles</p>
+                )}
+                {availableGestures.length > 12 && (
+                  <div className="bg-wisteria bg-opacity-10 px-3 py-2 rounded-lg text-center border-2 border-dashed border-wisteria">
+                    +{availableGestures.length - 12} más
+                  </div>
+                )}
               </div>
-              <div className="bg-wisteria bg-opacity-20 px-3 py-2 rounded-lg">
-                ☀️ Buenos días
-              </div>
-              <div className="bg-wisteria bg-opacity-20 px-3 py-2 rounded-lg">
-                ✌️ Paz
-              </div>
-              <div className="bg-wisteria bg-opacity-20 px-3 py-2 rounded-lg">
-                👋 Adiós
-              </div>
-            </div>
+            )}
           </div>
         </section>
       </div>
