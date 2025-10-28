@@ -1,5 +1,6 @@
 import nspell from "nspell";
-import fs from "fs"
+import fs from "fs";
+import path from "path";
 import dictionary from "dictionary-es-co";
 import { NextResponse } from "next/server";
 
@@ -36,7 +37,8 @@ const allWords = new Set(
 );
 
 // Load ngrams model
-const model = JSON.parse(fs.readFileSync("src/app/api/spelling/model.json", "utf8"));
+const modelPath = path.join(process.cwd(), "src/models/spellingModel.json");
+const model = JSON.parse(fs.readFileSync(modelPath, "utf8"));
 
 
 export async function POST(req) {
