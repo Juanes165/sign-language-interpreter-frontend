@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { MODEL_CONFIG, evaluateQuality } from '@/config/modelConfig';
 
 export default function SampleConfirmModal({ 
   sample, 
@@ -94,47 +95,47 @@ export default function SampleConfirmModal({
           </div>
 
           {/* Quality Indicator */}
-          <div className={`rounded-lg p-4 border-2 ${
-            sample.totalFrames >= 15 
-              ? 'bg-green-900 bg-opacity-30 border-green-500' 
-              : sample.totalFrames >= 10
-              ? 'bg-yellow-900 bg-opacity-30 border-yellow-500'
-              : 'bg-red-900 bg-opacity-30 border-red-500'
-          }`}>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">
-                {sample.totalFrames >= 15 ? '🎯' : sample.totalFrames >= 10 ? '⚠️' : '❌'}
-              </span>
-              <div>
-                <p className={`font-semibold ${
-                  sample.totalFrames >= 15 
-                    ? 'text-green-400' 
-                    : sample.totalFrames >= 10
-                    ? 'text-yellow-400'
-                    : 'text-red-400'
-                }`}>
-                  {sample.totalFrames >= 15 
-                    ? '¡Excelente calidad!' 
-                    : sample.totalFrames >= 10
-                    ? 'Calidad aceptable'
-                    : 'Calidad baja'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {sample.totalFrames >= 15 
-                    ? 'Esta muestra tiene suficientes frames para entrenar bien el modelo.' 
-                    : sample.totalFrames >= 10
-                    ? 'La muestra es válida pero podrías intentar capturar más frames.'
-                    : 'Se recomienda capturar al menos 10 frames para mejor precisión.'}
-                </p>
+          {(() => {
+            const quality = evaluateQuality(sample.totalFrames);
+            const colorClasses = {
+              green: 'bg-green-900 bg-opacity-30 border-green-500 text-green-400',
+              blue: 'bg-blue-900 bg-opacity-30 border-blue-500 text-blue-400',
+              yellow: 'bg-yellow-900 bg-opacity-30 border-yellow-500 text-yellow-400',
+              red: 'bg-red-900 bg-opacity-30 border-red-500 text-red-400'
+            };
+            const icons = {
+              excellent: '🏆',
+              optimal: '🎯',
+              good: '✅',
+              acceptable: '⚠️',
+              poor: '❌'
+            };
+            
+            return (
+              <div className={`rounded-lg p-4 border-2 ${colorClasses[quality.color]}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{icons[quality.level]}</span>
+                  <div>
+                    <p className={`font-semibold ${colorClasses[quality.color].split(' ').pop()}`}>
+                      {quality.label}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {quality.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Modelo usa: {MODEL_CONFIG.MODEL_FRAMES} frames | Tu captura: {sample.totalFrames} frames
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Help Text */}
           <div className="bg-blue-900 bg-opacity-20 border border-blue-600 rounded-lg p-4">
             <p className="text-sm text-blue-200">
-              <strong>💡 Recomendación:</strong> Si el gesto se capturó correctamente y tiene suficientes frames, 
-              súbelo para ayudar a mejorar el modelo. Si algo salió mal, elimínalo y vuelve a intentarlo.
+              <strong>💡 Recomendación:</strong> Para mejor precisión, intenta capturar entre {MODEL_CONFIG.RECOMMENDED_MIN_FRAMES}-{MODEL_CONFIG.EXCELLENT_FRAMES} frames. 
+              El modelo se entrena con {MODEL_CONFIG.MODEL_FRAMES} frames por muestra.
             </p>
           </div>
         </div>

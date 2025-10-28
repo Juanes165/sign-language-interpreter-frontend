@@ -181,14 +181,35 @@ export const MODEL_CONFIG = {
 
 /**
  * Mapeo de palabras a texto hablado (español)
+ * Convierte los IDs de gestos (con guiones) a texto legible
  */
 export const WORDS_TEXT = {
+  // Gestos básicos
+  "hola": "Hola",
   "adios": "Adiós",
   "bien": "Bien",
-  "hola": "Hola",
-  "como": "Cómo",
-  "comoestas": "¿Cómo estás?",
-  "dias": "Buenos días",
-  "minombrees": "Mi nombre es",
-  "paz": "Paz",
+  "mal": "Mal",
+  "gracias": "Gracias",
+  "perdon": "Perdón",
+  "lo-siento": "Lo siento",
+  "por-favor": "Por favor",
+  "con-gusto": "Con gusto",
+  
+  // Saludos y cortesía
+  "buenos-dias": "Buenos días",
+  "buenas-tardes": "Buenas tardes",
+  "buenas-noches": "Buenas noches",
+  "bienvenido": "Bienvenido",
+  
+  // Preguntas y respuestas
+  "como-estas": "¿Cómo estás?",
+  "mas-o-menos": "Más o menos",
+  
+  // Identidad y descripción
+  "sordo": "Sordo",
+  "permiso": "Permiso",
+  "feliz-cumpleanos": "Feliz cumpleaños",
+  
+  // Fallback: si no está en el diccionario, capitalizar y reemplazar guiones
+  // Esto se maneja dinámicamente en el hook
 };

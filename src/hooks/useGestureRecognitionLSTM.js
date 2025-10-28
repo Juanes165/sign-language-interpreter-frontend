@@ -196,8 +196,14 @@ export function useGestureRecognitionLSTM(options = {}) {
 
       if (confidence > threshold) {
         const label = labelsRef.current[maxIdx];
-        const wordId = label.split('-')[0]; // Remover sufijos como '-der'
-        const spokenText = WORDS_TEXT[wordId] || wordId;
+        
+        // Remover SOLO sufijos de direccionalidad (-der, -izq, -gen)
+        // pero mantener guiones en nombres de gestos (ej: "lo-siento", "como-estas")
+        const wordId = label.replace(/-(der|izq|gen)$/, '');
+        
+        // Buscar en diccionario o formatear automáticamente
+        const spokenText = WORDS_TEXT[wordId] || 
+          wordId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
         const predictionResult = {
           label,

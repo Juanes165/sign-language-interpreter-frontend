@@ -1,17 +1,22 @@
 {
   "word_ids": [
-    "con-gusto",
-    "buenas-noches",
-    "por-favor",
-    "adios",
-    "como-estas",
+    "buenos-dias",
+    "permiso",
     "bien",
     "feliz-cumpleanos",
-    "lo-siento",
-    "perdon",
-    "gracias",
-    "permiso",
+    "con-gusto",
     "hola",
-    "bienvenido"
+    "bienvenido",
+    "adios",
+    "mal",
+    "por-favor",
+    "lo-siento",
+    "gracias",
+    "buenas-noches",
+    "perdon",
+    "como-estas",
+    "buenas-tardes",
+    "mas-o-menos",
+    "sordo"
   ]
 }
