@@ -1,18 +1,24 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #F9F8FD;
-  --foreground: #070D1F;
+  --text-color: #070D1F;
   scrollbar-width: thin;
 }
 
 :root.dark {
   --background: #070D1F;
-  --foreground: #F9F8FD;
+  --text-color: #F9F8FD;
   scrollbar-width: thin;
 }
 
 @theme inline {
+
+  /* BREAKPOINT PARA RESPONSIVE */
+  --breakpoint-xs: 27.5rem;
+
   /* COLORES BASE PARA BG */
   --color-main-light: #F9F8FD;
   --color-main-dark: #070D1F;
@@ -25,27 +31,9 @@
   --color-violet-dark: #250C46;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* --background: #0a0a0a;
-    --foreground: #ededed; */
-
-    /* COLORES BASE PARA BG */
-    --color-main-light: #F9F8FD;
-    --color-main-dark: #070D1F;
-
-    /* COLORES COMPLEMENTARIOS */
-    --color-platinum: #E3E5E9;
-    --color-wisteria: #CB98ED;
-    --color-amethyst: #8B63DA;
-    --color-grape: #591DA9;
-    --color-violet-dark: #250C46;
-  }
-}
 
 body {
   background: var(--background);
-
-  color: var(--foreground);
+  color: var(--text-color);
   font-family: Arial, Helvetica, sans-serif;
 }
