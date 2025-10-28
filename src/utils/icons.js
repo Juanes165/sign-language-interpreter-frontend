@@ -33,11 +33,9 @@ export function AppLogo(props) {
 export function LandmarksLogo(props) {
   return (
     <svg viewBox="0 0 84.702 108.006" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <g style={{ 'display': 'inline' }}>
-        <path style={{mixBlendMode: 'normal', fill: 'none', stroke: 'currentColor', strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round', strokeDasharray: 'none', strokeOpacity: 1
-        }} d="M64.785 116.613v0l-.36 12.597 6.118 14.216 11.698 13.857 30.233 14.937 14.396-39.771-10.437-8.278-12.597-4.5-18.176 2.16-3.408 35.44" transform="translate(-58.675 -69.963)" />
-        <path style={{ fill: 'none', stroke: 'currentColor', strokeWidth: 4, strokeLinecap: 'round', strokeLinejoin: 'round', strokeDasharray: 'none', strokeOpacity: 1 }}
-          d="m85.679 121.817-.93-13.655V94.674l1.017-13.743M103.835 119.662l.764-10.737.89-16.542.891-16.67M116.444 124.16l3.934-13.708 1.018-15.27.254-15.015M126.848 132.449l6.931-8.842 3.848-9.393-.128-11.945" transform="translate(-58.675 -69.963)" />
+      <g display="inline">
+        <path mixblendmode="normal" fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="none" strokeOpacity={1} d="M64.785 116.613v0l-.36 12.597 6.118 14.216 11.698 13.857 30.233 14.937 14.396-39.771-10.437-8.278-12.597-4.5-18.176 2.16-3.408 35.44" transform="translate(-58.675 -69.963)" />
+        <path fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="none" strokeOpacity={1} d="m85.679 121.817-.93-13.655V94.674l1.017-13.743M103.835 119.662l.764-10.737.89-16.542.891-16.67M116.444 124.16l3.934-13.708 1.018-15.27.254-15.015M126.848 132.449l6.931-8.842 3.848-9.393-.128-11.945" transform="translate(-58.675 -69.963)" />
       </g>
     </svg>
   )
@@ -47,18 +45,34 @@ export function LandmarksPointsLogo(props) {
   return (
     <svg viewBox="0 0 86.673 109.235" xmlns="http://www.w3.org/2000/svg" {...props}>
       <g transform="translate(-62.67 -74.35)">
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="69.894" cy="121.613" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="86.799" cy="161.716" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="117.163" cy="176.74" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="131.615" cy="137.424" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="121.319" cy="128.844" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="108.836" cy="124.546" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="90.785" cy="126.84" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="111.383" cy="81.195" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="90.808" cy="86.235" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="126.603" cy="85.817" r="5" />
-        <circle style={{ fill: 'currentColor', strokeWidth: 0.264583 }} cx="142.357" cy="107.688" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="69.894" cy="121.613" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="86.799" cy="161.716" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="117.163" cy="176.74" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="131.615" cy="137.424" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="121.319" cy="128.844" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="108.836" cy="124.546" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="90.785" cy="126.84" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="111.383" cy="81.195" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="90.808" cy="86.235" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="126.603" cy="85.817" r="5" />
+        <circle fill="currentColor" strokeWidth={0.264583} cx="142.357" cy="107.688" r="5" />
       </g>
+    </svg>
+  )
+}
+
+export function SunIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 12a5 5 0 1 1-10 0a5 5 0 0 1 10 0M12 2v1.5m0 17V22m7.07-2.929l-1.06-1.06M5.99 5.989L4.928 4.93M22 12h-1.5m-17 0H2m17.071-7.071l-1.06 1.06M5.99 18.011l-1.06 1.06" color="currentColor" />
+    </svg>
+  )
+}
+
+export function MoonIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21.5 14.078A8.557 8.557 0 0 1 9.922 2.5C5.668 3.497 2.5 7.315 2.5 11.873a9.627 9.627 0 0 0 9.627 9.627c4.558 0 8.376-3.168 9.373-7.422" color="currentColor" />
     </svg>
   )
 }

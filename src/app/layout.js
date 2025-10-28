@@ -19,6 +19,16 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script id="theme-init" strategy="beforeInteractive">
+          {`
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+              document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+            }
+          `}
+        </script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
