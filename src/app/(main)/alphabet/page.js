@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
 import { ToggleSwitch, NumberInput } from "@/components/common";
 import { getVideoConstraints } from "@/lib";
-import { HandIcon, CameraIcon } from "@/utils/icons";
+import { HandIcon, CameraIcon, LandmarksLogo, LandmarksPointsLogo } from "@/utils/icons";
 
 export default function AlphabetHome() {
 
@@ -21,12 +21,21 @@ export default function AlphabetHome() {
   const [enableMultihands, setEnableMultihands] = useState(false);
   const [numberOfHands, setNumberOfHands] = useState(1)
 
-  const [curretGesture, setCurrentGesture] = useState('');
-  const [currentGestureScore, setCurrentGestureScore] = useState(0);
+  const [curretSign, setCurrentSign] = useState('');
+  const [currentSignScore, setCurrentSignScore] = useState(0);
+
+  const [currentWord, setCurrentWord] = useState('');
+
+  const [fullText, setFullText] = useState([]);
+  const fullTextRef = useRef(fullText);
+
+  const [wordSuggestions, setWordSuggestions] = useState(['', '', '']);
+
 
   useEffect(() => {
     showLandmarksRef.current = showLandmarks;
-  }, [showLandmarks]);
+    fullTextRef.current = fullText;
+  }, [showLandmarks, fullText]);
 
 
   useEffect(() => {
@@ -86,35 +95,111 @@ export default function AlphabetHome() {
       });
     };
 
-
     const detectHands = () => {
+      const targetFPS = 10;
+      const frameInterval = 1000 / targetFPS;
 
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
+      // Buffer de letras recientes (ventana de 1 segundo)
+      const bufferSize = 10;
+      let letterBuffer = [];
 
-      if (video && video.readyState >= 2) {
-        const detections = gestureRecognizer.recognizeForVideo(videoRef.current, performance.now());
+      let confirmedLetter = '';
+      let currentWordLetters = [];
 
-        if (detections.gestures.length) {
-          setCurrentGesture(detections.gestures[0][0].categoryName);
-          setCurrentGestureScore(detections.gestures[0][0].score)
+      let canvas;
+      let ctx;
+
+      setInterval(() => {
+        const video = videoRef.current;
+
+        try {
+          canvas = canvasRef.current;
+          ctx = canvas.getContext('2d');
         }
-        else {
-          setCurrentGesture('');
-          setCurrentGestureScore(1);
+        catch {
+          console.error("No se pudo inicializar el canvas")
         }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (video && video.readyState >= 2) {
+          const detections = gestureRecognizer.recognizeForVideo(video, performance.now());
 
-        // Assuming detections.landmarks is an array of landmark objects
-        if (detections.landmarks && showLandmarksRef.current) {
-          drawLandmarks(detections.landmarks);
+          // Drawing the landmarks
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          if (detections.landmarks && showLandmarksRef.current && canvas) {
+            drawLandmarks(detections.landmarks);
+          }
+
+          if (!detections.handednesses.length) {
+
+            if (currentWordLetters.length) {
+              const currentWord = currentWordLetters.map((curretSign) => labels_dict[curretSign]).join("")
+
+              fetch("api/spelling", {
+                method: "POST",
+                body: JSON.stringify(
+                  {
+                    word: currentWord,
+                    context: fullTextRef.current.at(-1) || ''
+                  }),
+                headers: {
+                  "Content-Type": "application/json",
+                }
+              }).then((res) => res.json())
+                .then((response) => {
+                  setCurrentWord(response.corrected);
+                  setFullText(prevFullText => [...prevFullText, response.corrected])
+                  setWordSuggestions([
+                    currentWord,
+                    ...response.suggestions.filter(item => item != currentWord).slice(0, 2)
+                  ])
+                })
+                .catch((error) => {
+                  console.error("Error al cargar corrección", error)
+                  setFullText(prevFullText => [...prevFullText, currentWord])
+                });
+            }
+
+            letterBuffer = [];
+            confirmedLetter = '';
+            currentWordLetters = [];
+          }
+
+          let detectedLetter = null;
+          if (detections.gestures.length) {
+            detectedLetter = detections.gestures[0][0].categoryName;
+            setCurrentSign(labels_dict[detections.gestures[0][0].categoryName]);
+            setCurrentSignScore(detections.gestures[0][0].score);
+          } else {
+            detectedLetter = '';
+            setCurrentSign('');
+            setCurrentSignScore(0);
+          }
+
+          if (detectedLetter || detectedLetter === '') {
+            // Keep the last 10 detections in the buffer
+            letterBuffer.push(detectedLetter);
+            if (letterBuffer.length > bufferSize) letterBuffer.shift();
+
+            // Most frequent letter into the buffer
+            const freq = {};
+            letterBuffer.forEach(l => (freq[l] = (freq[l] || 0) + 1));
+            const [mostCommon, count] = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
+
+            const stabilityThreshold = Math.floor(bufferSize * 0.7);
+
+            // If the most common letter is different, its the new letter to add
+            if (count >= stabilityThreshold && mostCommon !== confirmedLetter) {
+              confirmedLetter = mostCommon;
+              currentWordLetters.push(confirmedLetter);
+
+              const currentWord = currentWordLetters.map((curretSign) => labels_dict[curretSign]).join("")
+              setCurrentWord(currentWord);
+            }
+          }
+
         }
-      }
-
-
-      requestAnimationFrame(detectHands);
+      }, frameInterval);
     };
 
 
@@ -141,7 +226,7 @@ export default function AlphabetHome() {
 
         const videoConstraints = getVideoConstraints();
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, facingMode: "user" } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, facingMode: "user", frameRate: 24 } });
 
         videoRef.current.srcObject = stream;
 
@@ -185,19 +270,12 @@ export default function AlphabetHome() {
       if (container && canvas) {
         const rect = container.getBoundingClientRect();
 
-        // Establece el tamaño físico del canvas (resolución)
+        // Set canvas size equal to container div
         canvas.width = rect.width;
         canvas.height = rect.height;
 
-        // Asegura que se vea bien
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
-
-        // Opcional: redibujar algo
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     };
 
@@ -209,74 +287,126 @@ export default function AlphabetHome() {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
+  const updateWordWithSuggestion = (word) => {
+    setFullText(prev => [...prev.slice(0, -1), word])
+  }
+
+  const clearText = () => {
+    setFullText([]);
+    setCurrentWord('');
+    setWordSuggestions(['','','']);
+  }
+
   return (
     <>
-      <div className="text-amethyst text-4xl md:text-5xl text-center w-full font-semibold mt-8 mb-2">INTERPRETADOR</div>
-      <div className="px-8 md:px-20 py-8 flex flex-col lg:flex-row space-x-10 justify-between">
-            {/* <span>{debug}</span> */}
+      <div className="text-amethyst text-2xl md:text-4xl lg:text-5xl text-center w-full font-semibold py-3 md:py-4 lg:py-8">{"> Interpretador <"}</div>
+      <div className="px-12 md:px-20 pb-8 flex flex-col lg:flex-row space-x-10 justify-between">
+        {/* {window.screen.width + 'x' + window.screen.height}
+        {window.innerWidth + 'x' + window.innerHeight} */}
 
         {/* CAMERA */}
-        <section ref={containerRef} className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark rounded-4xl">
+        <section ref={containerRef} className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark dark:bg-main-light/5 rounded-3xl md:rounded-4xl shadow-md/50 dark:shadow-sm dark:shadow-main-light">
           {loadingWebcam && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  text-platinum flex flex-col items-center">
-              <CameraIcon className="text-platinum w-40 h-40"/>
+              <CameraIcon className="text-platinum w-40 h-40" />
               <span className="text-3xl text-center font-semibold">Cargando tu cámara</span>
             </div>
           )}
           <video
-            className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-4xl`}
+            className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
             ref={videoRef}
             autoPlay
             playsInline
           />
-          <canvas className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-0 left-0 w-full h-full z-10 rounded-4xl`} ref={canvasRef}></canvas>
+          <canvas className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-0 left-0 w-full h-full z-1 rounded-3xl md:rounded-4xl bg-transparent`} ref={canvasRef}></canvas>
+
+
+          {/* BUTTON TO SHOW LANDMARKS */}
+          <div className="w-16 h-16 bg-wisteria hover:bg-amethyst dark:bg-amethyst dark:hover:bg-grape rounded-full absolute bottom-2 right-2 lg:bottom-5 lg:right-5 cursor-pointer shadow-sm z-2">
+            <button className="relative w-full h-full cursor-pointer" type="button" onClick={() => setShowLandmarks(!showLandmarks)}>
+              <LandmarksLogo className="w-14 h-14 rotate-12 text-main-light absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              <LandmarksPointsLogo className="w-14 h-14 rotate-12 text-grape dark:text-violet-dark absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            </button>
+          </div>
+
+
+          {/* little header with predicted letter, MOBILE ONLY */}
+          {!loadingWebcam &&
+            <div className="absolute top-0 w-full h-20 p-3 md:px-40 z-2 lg:hidden">
+              <div className="w-full h-full bg-main-light/70 dark:bg-main-dark/35 backdrop-blur-sm rounded-2xl flex px-8 items-center justify-center">
+                <HandIcon width="56" height="56" className="text-amethyst dark:text-grape" />
+                <div className="w-20 ml-2 flex justify-center">
+                  <span className="text-5xl font-semibold text-amethyst dark:text-grape">{curretSign.toUpperCase() || '—'}</span>
+                </div>
+                <div className="w-24 flex justify-end">
+                  <span className="text-4xl font-semibold text-wisteria dark:text-amethyst self-center">{Math.trunc(currentSignScore * 100) + "%" || '-'}</span>
+                </div>
+              </div>
+            </div>
+          }
+
         </section>
 
 
-        {/* RIGHT DIV, OPTIONS */}
-        <section className="flex flex-col w-full pt-6 max-w-80 justify-center items-center self-center">
+        {/* RIGHT DIV, WORDS AND PREDICTIONS */}
+        <section className="flex flex-col w-full pt-4 lg:max-w-80 2xl:max-w-96 justify-center items-center self-center ">
 
-          <div className="flex px-4 space-x-2 items-center justify-between">
-            <HandIcon width="72" height="72" className="text-amethyst"/>
+          {/* SHOWING THE PREDICTIONS */}
+          <div className="hidden lg:flex px-4 space-x-2 items-center justify-between">
+            <HandIcon width="72" height="72" className="text-amethyst dark:text-wisteria" />
             <div className="w-20 flex justify-center">
-              <span className="text-7xl font-semibold text-amethyst">{labels_dict[curretGesture] || '—'}</span>
+              <span className="text-7xl font-semibold text-amethyst dark:text-wisteria">{curretSign.toUpperCase() || '—'}</span>
             </div>
             <div className="w-32 flex justify-end">
-              <span className="text-5xl font-semibold text-wisteria self-center">{Math.trunc(currentGestureScore * 100) + "%" || '-'}</span>
+              <span className="text-5xl font-semibold text-wisteria dark:text-amethyst self-center">{Math.trunc(currentSignScore * 100) + "%" || '-'}</span>
             </div>
           </div>
 
-          {/* CONFIG OPTIONS */}
-          <div className="mt-10">
-            <div className="space-x-3 flex flex-row items-center justify-center my-4">
-              <ToggleSwitch checked={showLandmarks} setChecked={setShowLandmarks} />
-              <span className="text-xl">Mostrar landmarks</span>
+          {/* LETTERS AND TEXT AREA */}
+          <div className="lg:mt-10 w-full">
+            <div className="flex flex-col justify-center">
+
+              <span
+                className="w-auto min-w-60 text-3xl text-center py-2 rounded-md bg-wisteria/25 dark:bg-amethyst/75 truncate shadow-sm"
+                onClick={() => updateWordWithSuggestion(currentWord)}
+              >
+                {currentWord || '—'}
+              </span>
+
+              <div className="flex flex-row bg-platinum/25 dark:bg-platinum/10 mx-1.5 rounded-b-lg shadow-md">
+                {wordSuggestions.map((word, index) => (
+                  <span
+                    key={index}
+                    style={{ direction: 'rtl' }}
+                    className={`flex-1 h-7 text-base xs:text-lg text-center overflow-hidden whitespace-nowrap my-2 px-2 border-platinum ${index && 'border-platinum border-l'}`}
+                    onClick={() => updateWordWithSuggestion(word)}
+                  >
+                    {word || ' '}
+                  </span>
+                ))}
+              </div>
             </div>
-            {/* <div className="space-x-3 flex flex-row items-center my-4">
-              <ToggleSwitch checked={enableMultihands} setChecked={setEnableMultihands}/>
-              <span className="text-xl">Habilitar multimanos</span>
-              <NumberInput />
+            <div
+              className="mt-5 py-4 px-8 text-center cursor-pointer border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10"
+              onClick={clearText}
+            >
+              <span className="text-xl self-center">{fullText.join(" ") || '· · ·'}</span>
             </div>
-            <div className="space-x-3 flex flex-row items-center my-4">
-              <ToggleSwitch />
-              <span className="text-xl">Completar palabras</span>
-            </div> */}
 
           </div>
 
         </section>
 
-
-
       </div>
+
     </>
   )
 }
 
 
 const labels_dict = {
-  "0": "A", "1": "B", "2": "C", "3": "D", "4": "E", "5": "F", "6": "G", "7": "H", "8": "I",
-  "9": "J", "10": "K", "11": "L", "12": "M", "13": "N", "14": "Ñ", "15": "O", "16": "P",
-  "17": "Q", "18": "R", "19": "S", "20": "T", "21": "U", "22": "V", "23": "W", "24": "X",
-  "25": "Y", "26": "Z", "": ""
-}
+  "0": "a", "1": "b", "2": "c", "3": "d", "4": "e", "5": "f", "6": "g", "7": "h", "8": "i",
+  "9": "j", "10": "k", "11": "l", "12": "m", "13": "n", "14": "ñ", "15": "o", "16": "p",
+  "17": "q", "18": "r", "19": "s", "20": "t", "21": "u", "22": "v", "23": "w", "24": "x",
+  "25": "y", "26": "z", "": ""
+};

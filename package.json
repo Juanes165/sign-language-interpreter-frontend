@@ -15,7 +15,10 @@
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
     "@tensorflow/tfjs": "^4.22.0",
     "googleapis": "^164.1.0",
+    "dictionary-es": "^4.0.0",
+    "dictionary-es-co": "^2.0.0",
     "next": "15.5.4",
+    "nspell": "^2.1.5",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
