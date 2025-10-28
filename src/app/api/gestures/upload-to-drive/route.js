@@ -42,7 +42,7 @@ export async function POST(request) {
     const drive = google.drive({ version: 'v3', auth });
     
     // ID de la carpeta de Google Drive (extraído de la URL)
-    const folderId = '1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg';
+    const folderId = '1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb';
 
     if (!folderId) {
       throw new Error('ID de carpeta de Drive no configurado');

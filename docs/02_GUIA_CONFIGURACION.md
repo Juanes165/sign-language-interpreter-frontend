@@ -96,7 +96,7 @@ unavoz-bb3744af7f68.json
 
 **Ejemplo de URL:**
 ```
-https://drive.google.com/drive/folders/1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg
+https://drive.google.com/drive/folders/1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb
                                          ↑
                                     Folder ID
 ```
@@ -106,7 +106,7 @@ https://drive.google.com/drive/folders/1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg
 Editar `src/app/api/gestures/upload-to-drive/route.js`:
 
 ```javascript
-const folderId = '1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg'; // Tu Folder ID
+const folderId = '1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb'; // Tu Folder ID
 ```
 
 ---
@@ -454,7 +454,7 @@ http://localhost:3000/gestures
 ```bash
 # Capturar un gesto en /contribute
 # Verificar en Google Drive que se haya subido
-# URL: https://drive.google.com/drive/folders/1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg
+# URL: https://drive.google.com/drive/folders/1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb
 ```
 
 ---

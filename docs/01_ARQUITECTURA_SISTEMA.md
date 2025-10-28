@@ -31,7 +31,7 @@ Sistema web de reconocimiento de gestos en lengua de señas con contribución co
 
 2. ALMACENAMIENTO (Google Drive)
    ☁️ Upload automático vía API
-   📁 carpeta: 1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg
+   📁 carpeta: 1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb
    📄 Archivo: hola_1761524455360.json
 
 3. PROCESAMIENTO (Backend Admin - gesto_releasev1)
@@ -188,7 +188,7 @@ localStorage → Google Drive API → carpeta compartida
 #### **`/api/gestures/upload-to-drive`**
 - Sube JSON a Google Drive
 - Service Account: `unavoz@unavoz.iam.gserviceaccount.com`
-- Folder ID: `1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg`
+- Folder ID: `1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb`
 
 #### **`/api/gestures/batch`**
 - Operaciones batch (futuro)
@@ -295,10 +295,10 @@ const gestureName = words.word_ids[gestureIndex];
 ### **Folder ID**
 
 ```
-1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg
+1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb
 ```
 
-**URL:** [https://drive.google.com/drive/folders/1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg](https://drive.google.com/drive/folders/1jNbfTqDI2nqs6xX5tFxOrbneOV0vJQzg)
+**URL:** [https://drive.google.com/drive/folders/1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb](https://drive.google.com/drive/folders/1zkP5QPXCZU1nM2hL11r6VIzK0053yNtb)
 
 ### **Upload desde Frontend**
 

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useContributeCapture } from '@/hooks/useContributeCapture';
+import SamplesList from './SamplesList';
+import SampleConfirmModal from './SampleConfirmModal';
 
 export default function GestureCapture({ gesture, onBack }) {
   const [isClient, setIsClient] = useState(false);
@@ -15,11 +17,20 @@ export default function GestureCapture({ gesture, onBack }) {
     isCapturing,
     capturedFrames,
     totalSamples,
+    pendingSamples,
+    currentSample,
+    waitingForDecision,
     status,
     error,
     initializeHolistic,
     startCamera,
     cleanup,
+    confirmCurrentSample,
+    rejectCurrentSample,
+    deleteSample,
+    uploadSample,
+    uploadAllSamples,
+    clearUploadedSamples,
   } = useContributeCapture({
     preCaptureFrames: 1,
     minRequiredFrames: 5,
@@ -62,6 +73,24 @@ export default function GestureCapture({ gesture, onBack }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient, gesture?.id]); // Solo depende de isClient y gesture.id
+
+  // ⌨️ Soporte de teclado para el modal (Enter = Subir, Delete = Eliminar)
+  useEffect(() => {
+    if (!waitingForDecision || !currentSample) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmCurrentSample();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        rejectCurrentSample();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [waitingForDecision, currentSample, confirmCurrentSample, rejectCurrentSample]);
 
   // No renderizar hasta que esté en el cliente
   if (!isClient) {
@@ -269,36 +298,21 @@ export default function GestureCapture({ gesture, onBack }) {
         </div>
       </div>
 
-      {/* Export Button */}
-      {totalSamples > 0 && (
-        <div className="mt-6">
-          <button
-            onClick={() => {
-              // Exportar todas las muestras
-              const allSamples = [];
-              for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('gesture_')) {
-                  const sample = JSON.parse(localStorage.getItem(key));
-                  allSamples.push(sample);
-                }
-              }
-              
-              const dataStr = JSON.stringify(allSamples, null, 2);
-              const dataBlob = new Blob([dataStr], { type: 'application/json' });
-              const url = URL.createObjectURL(dataBlob);
-              const link = document.createElement('a');
-              link.href = url;
-              link.download = `gesture_samples_${new Date().getTime()}.json`;
-              link.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-          >
-            💾 Exportar {totalSamples} muestra{totalSamples !== 1 ? 's' : ''}
-          </button>
-        </div>
-      )}
+      {/* Historial de muestras subidas */}
+      <div className="mt-8">
+        <SamplesList
+          samples={pendingSamples}
+          onClearUploaded={clearUploadedSamples}
+        />
+      </div>
+
+      {/* Modal de Confirmación - Aparece después de cada captura */}
+      <SampleConfirmModal
+        sample={currentSample}
+        onUpload={confirmCurrentSample}
+        onDelete={rejectCurrentSample}
+        isOpen={waitingForDecision && currentSample !== null}
+      />
     </div>
   );
 }

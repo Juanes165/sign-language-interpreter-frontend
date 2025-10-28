@@ -20,6 +20,7 @@ export function useContributeCapture(options = {}) {
   const holisticRef = useRef(null);
   const cameraRef = useRef(null);
   const isInitializingRef = useRef(false); // Prevenir inicializaciones concurrentes
+  const waitingForDecisionRef = useRef(false); // ⭐ Control de procesamiento
 
   // Estado de captura
   const keypointsBufferRef = useRef([]); // Guardamos keypoints (1662 valores por frame)
@@ -33,6 +34,9 @@ export function useContributeCapture(options = {}) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState(0);
   const [totalSamples, setTotalSamples] = useState(0);
+  const [pendingSamples, setPendingSamples] = useState([]); // ⭐ Muestras pendientes de subir
+  const [currentSample, setCurrentSample] = useState(null); // ⭐ Muestra actual esperando decisión
+  const [waitingForDecision, setWaitingForDecision] = useState(false); // ⭐ Pausa la captura
   const [status, setStatus] = useState('Inicializando...');
   const [error, setError] = useState(null);
 
@@ -93,8 +97,8 @@ export function useContributeCapture(options = {}) {
   }, []);
 
   /**
-   * Guarda una muestra capturada con keypoints
-   * Prioridad: Google Drive → Backend local → localStorage
+   * Captura una muestra y PAUSA esperando decisión del usuario
+   * El usuario debe confirmar (subir) o rechazar (eliminar)
    */
   const saveSample = useCallback(async (keypoints, gesture) => {
     if (!keypoints || keypoints.length === 0) {
@@ -104,6 +108,7 @@ export function useContributeCapture(options = {}) {
 
     const timestamp = Date.now();
     const sample = {
+      id: `sample_${timestamp}`, // ID único para identificar la muestra
       gesture: gesture.id,
       gestureName: gesture.label,
       timestamp,
@@ -112,65 +117,24 @@ export function useContributeCapture(options = {}) {
       metadata: {
         date: new Date().toISOString(),
         browser: navigator.userAgent,
-      }
+      },
+      uploaded: false, // ⭐ Estado de subida
     };
 
-    // Opción 1: Google Drive (recomendado) ⭐
-    if (useDrive) {
-      try {
-        const result = await uploadToDrive(sample);
-        console.log(`✅ Subido a Drive: ${result.filename}`);
-        setTotalSamples(prev => prev + 1);
-        
-        if (onCapture) {
-          onCapture(sample);
-        }
-        
-        return result;
-      } catch (error) {
-        console.error('❌ Error subiendo a Drive:', error);
-        console.log('⚠️ Intentando guardar en backend local...');
-        // Continuar con backend local si falla Drive
-      }
+    console.log(`✅ Muestra capturada: ${sample.totalFrames} frames - Esperando decisión del usuario`);
+
+    // ⭐ PAUSA y espera decisión del usuario
+    setCurrentSample(sample);
+    setWaitingForDecision(true);
+    waitingForDecisionRef.current = true; // ⭐ Pausar procesamiento de MediaPipe
+    setStatus('⏸️ Esperando tu decisión...');
+
+    if (onCapture) {
+      onCapture(sample);
     }
 
-    // Opción 2: Backend local (fallback)
-    try {
-      const result = await saveToBackend(sample);
-      console.log(`✅ Guardado en backend local: ${result.filename}`);
-      setTotalSamples(prev => prev + 1);
-      
-      if (onCapture) {
-        onCapture(sample);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('❌ Error en backend local:', error);
-      console.log('⚠️ Intentando guardar en localStorage...');
-    }
-
-    // Opción 3: localStorage (último recurso)
-    const storageKey = `gesture_${gesture.id}_${timestamp}`;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(sample));
-      console.log(`✅ Muestra guardada localmente: ${storageKey}`);
-
-      setTotalSamples(prev => prev + 1);
-
-      if (onCapture) {
-        onCapture(sample);
-      }
-
-      return sample;
-    } catch (err) {
-      console.error('❌ Error guardando muestra:', err);
-      if (err.name === 'QuotaExceededError') {
-        alert('⚠️ Memoria llena. Contacta al administrador.');
-      }
-      return null;
-    }
-  }, [useDrive, onCapture]);
+    return sample;
+  }, [onCapture]);
 
   /**
    * Resetea el estado de captura
@@ -183,6 +147,85 @@ export function useContributeCapture(options = {}) {
     setIsCapturing(false);
     setCapturedFrames(0);
   }, []);
+
+  /**
+   * El usuario CONFIRMA la muestra - la sube
+   */
+  const confirmCurrentSample = useCallback(async () => {
+    if (!currentSample) return;
+
+    console.log(`📤 Usuario confirmó subir muestra: ${currentSample.id}`);
+
+    // Opción 1: Google Drive (recomendado) ⭐
+    let uploadResult = { success: false };
+    
+    if (useDrive) {
+      try {
+        const result = await uploadToDrive(currentSample);
+        console.log(`✅ Subido a Drive: ${result.filename}`);
+        uploadResult = { success: true, method: 'drive', result };
+      } catch (error) {
+        console.error('❌ Error subiendo a Drive:', error);
+        console.log('⚠️ Intentando guardar en backend local...');
+      }
+    }
+
+    // Opción 2: Backend local (fallback)
+    if (!uploadResult.success) {
+      try {
+        const result = await saveToBackend(currentSample);
+        console.log(`✅ Guardado en backend local: ${result.filename}`);
+        uploadResult = { success: true, method: 'backend', result };
+      } catch (error) {
+        console.error('❌ Error en backend local:', error);
+        console.log('⚠️ Guardando en localStorage...');
+      }
+    }
+
+    // Opción 3: localStorage (último recurso)
+    if (!uploadResult.success) {
+      const storageKey = `gesture_${currentSample.gesture}_${currentSample.timestamp}`;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(currentSample));
+        console.log(`✅ Muestra guardada localmente: ${storageKey}`);
+        uploadResult = { success: true, method: 'localStorage', result: { key: storageKey } };
+      } catch (err) {
+        console.error('❌ Error guardando muestra:', err);
+        if (err.name === 'QuotaExceededError') {
+          alert('⚠️ Memoria llena. Contacta al administrador.');
+        }
+      }
+    }
+
+    // Agregar a la lista de subidas (para historial)
+    if (uploadResult.success) {
+      setPendingSamples(prev => [...prev, { ...currentSample, uploaded: true }]);
+      setTotalSamples(prev => prev + 1);
+    }
+
+    // Resetear y continuar
+    setCurrentSample(null);
+    setWaitingForDecision(false);
+    waitingForDecisionRef.current = false; // ⭐ Reanudar procesamiento de MediaPipe
+    setStatus('✋ Listo para capturar');
+
+    return uploadResult;
+  }, [currentSample, useDrive]);
+
+  /**
+   * El usuario RECHAZA la muestra - la elimina
+   */
+  const rejectCurrentSample = useCallback(() => {
+    if (!currentSample) return;
+
+    console.log(`🗑️ Usuario rechazó muestra: ${currentSample.id}`);
+
+    // Simplemente descartamos la muestra
+    setCurrentSample(null);
+    setWaitingForDecision(false);
+    waitingForDecisionRef.current = false; // ⭐ Reanudar procesamiento de MediaPipe
+    setStatus('✋ Listo para capturar');
+  }, [currentSample]);
 
   // ⚡ Landmarks desactivados para mejor rendimiento
 
@@ -199,6 +242,27 @@ export function useContributeCapture(options = {}) {
     // Dibujar video (sin landmarks para mejor rendimiento)
     if (results.image) {
       ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+    }
+
+    // ⭐ Si está esperando decisión, mostrar overlay de pausa
+    if (waitingForDecision) {
+      // Oscurecer la imagen
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Mensaje grande en el centro
+      ctx.fillStyle = '#FFA500';
+      ctx.font = 'bold 36px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('⏸️ PAUSADO', canvas.width / 2, canvas.height / 2 - 20);
+      
+      ctx.font = 'bold 20px Arial';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText('Esperando tu decisión...', canvas.width / 2, canvas.height / 2 + 20);
+      
+      // Resetear alineación
+      ctx.textAlign = 'left';
+      return;
     }
 
     // Lógica de captura
@@ -270,7 +334,8 @@ export function useContributeCapture(options = {}) {
     resetCaptureState,
     preCaptureFrames,
     minRequiredFrames,
-    frameDelay
+    frameDelay,
+    waitingForDecision
   ]);
 
   /**
@@ -371,7 +436,8 @@ export function useContributeCapture(options = {}) {
         setStatus('✋ Listo para capturar');
 
         const processFrame = async () => {
-          if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
+          // ⭐ NO PROCESAR si está esperando decisión del usuario
+          if (!waitingForDecisionRef.current && holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
             await holisticRef.current.send({ image: video });
           }
           if (cameraRef.current) {
@@ -430,6 +496,9 @@ export function useContributeCapture(options = {}) {
     setStatus('Detenido');
     setError(null);
     isInitializingRef.current = false;
+    waitingForDecisionRef.current = false; // ⭐ Resetear ref
+    setCurrentSample(null);
+    setWaitingForDecision(false);
   }, [resetCaptureState]);
 
   /**
@@ -437,7 +506,112 @@ export function useContributeCapture(options = {}) {
    */
   const clearSamples = useCallback(() => {
     setTotalSamples(0);
+    setPendingSamples([]);
   }, []);
+
+  /**
+   * Elimina una muestra específica de la lista temporal
+   */
+  const deleteSample = useCallback((sampleId) => {
+    setPendingSamples(prev => prev.filter(s => s.id !== sampleId));
+    setTotalSamples(prev => prev - 1);
+    console.log(`🗑️ Muestra eliminada: ${sampleId}`);
+  }, []);
+
+  /**
+   * Sube una muestra específica a Drive/Backend
+   */
+  const uploadSample = useCallback(async (sampleId) => {
+    const sample = pendingSamples.find(s => s.id === sampleId);
+    if (!sample) {
+      console.error('❌ Muestra no encontrada:', sampleId);
+      return { success: false, error: 'Muestra no encontrada' };
+    }
+
+    console.log(`📤 Subiendo muestra ${sampleId}...`);
+
+    // Opción 1: Google Drive (recomendado) ⭐
+    if (useDrive) {
+      try {
+        const result = await uploadToDrive(sample);
+        console.log(`✅ Subido a Drive: ${result.filename}`);
+        
+        // Marcar como subido
+        setPendingSamples(prev => prev.map(s => 
+          s.id === sampleId ? { ...s, uploaded: true } : s
+        ));
+        
+        return { success: true, method: 'drive', result };
+      } catch (error) {
+        console.error('❌ Error subiendo a Drive:', error);
+        console.log('⚠️ Intentando guardar en backend local...');
+      }
+    }
+
+    // Opción 2: Backend local (fallback)
+    try {
+      const result = await saveToBackend(sample);
+      console.log(`✅ Guardado en backend local: ${result.filename}`);
+      
+      setPendingSamples(prev => prev.map(s => 
+        s.id === sampleId ? { ...s, uploaded: true } : s
+      ));
+      
+      return { success: true, method: 'backend', result };
+    } catch (error) {
+      console.error('❌ Error en backend local:', error);
+      console.log('⚠️ Intentando guardar en localStorage...');
+    }
+
+    // Opción 3: localStorage (último recurso)
+    const storageKey = `gesture_${sample.gesture}_${sample.timestamp}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(sample));
+      console.log(`✅ Muestra guardada localmente: ${storageKey}`);
+
+      setPendingSamples(prev => prev.map(s => 
+        s.id === sampleId ? { ...s, uploaded: true } : s
+      ));
+
+      return { success: true, method: 'localStorage', result: { key: storageKey } };
+    } catch (err) {
+      console.error('❌ Error guardando muestra:', err);
+      if (err.name === 'QuotaExceededError') {
+        return { success: false, error: 'Memoria llena. Contacta al administrador.' };
+      }
+      return { success: false, error: err.message };
+    }
+  }, [pendingSamples, useDrive]);
+
+  /**
+   * Sube todas las muestras pendientes
+   */
+  const uploadAllSamples = useCallback(async () => {
+    const unuploadedSamples = pendingSamples.filter(s => !s.uploaded);
+    console.log(`📤 Subiendo ${unuploadedSamples.length} muestras...`);
+
+    const results = [];
+    for (const sample of unuploadedSamples) {
+      const result = await uploadSample(sample.id);
+      results.push({ sampleId: sample.id, ...result });
+    }
+
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+
+    console.log(`✅ Subidas exitosas: ${successful}, ❌ Fallos: ${failed}`);
+    return { successful, failed, results };
+  }, [pendingSamples, uploadSample]);
+
+  /**
+   * Elimina todas las muestras subidas de la lista
+   */
+  const clearUploadedSamples = useCallback(() => {
+    setPendingSamples(prev => prev.filter(s => !s.uploaded));
+    const uploadedCount = pendingSamples.filter(s => s.uploaded).length;
+    setTotalSamples(prev => prev - uploadedCount);
+    console.log(`🧹 ${uploadedCount} muestras subidas eliminadas de la lista`);
+  }, [pendingSamples]);
 
   return {
     videoRef,
@@ -447,11 +621,21 @@ export function useContributeCapture(options = {}) {
     isCapturing,
     capturedFrames,
     totalSamples,
+    pendingSamples,
+    currentSample, // ⭐ Muestra actual esperando decisión
+    waitingForDecision, // ⭐ Flag de pausa
     status,
     error,
     initializeHolistic,
     startCamera,
     cleanup,
     clearSamples,
+    confirmCurrentSample, // ⭐ Confirmar y subir
+    rejectCurrentSample, // ⭐ Rechazar y eliminar
+    // Funciones legacy para compatibilidad con SamplesList
+    deleteSample,
+    uploadSample,
+    uploadAllSamples,
+    clearUploadedSamples,
   };
 }
