@@ -250,7 +250,8 @@ export default function AlphabetHome() {
 
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        const video = videoRef.current;
+        video.srcObject.getTracks().forEach(track => track.stop());
       }
       if (gestureRecognizer) {
         gestureRecognizer.close();

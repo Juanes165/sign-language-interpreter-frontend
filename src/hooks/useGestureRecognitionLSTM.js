@@ -129,7 +129,7 @@ export function useGestureRecognitionLSTM(options = {}) {
       }
     }
 
-  }, [marginFrame, delayFrames, minLengthFrames, threshold]);
+  }, [marginFrame, delayFrames, minLengthFrames, processPrediction, resetCaptureState]);
 
   /**
    * Procesa la predicción con el modelo LSTM
@@ -229,7 +229,7 @@ export function useGestureRecognitionLSTM(options = {}) {
     } finally {
       resetCaptureState();
     }
-  }, []);
+  }, [delayFrames, marginFrame, maxSentenceLength, onPrediction, resetCaptureState, threshold]);
 
   /**
    * Resetea el estado de captura

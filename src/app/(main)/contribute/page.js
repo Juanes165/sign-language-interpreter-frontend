@@ -130,7 +130,7 @@ export default function ContributePage() {
                 <li>Selecciona el gesto que deseas grabar de la lista</li>
                 <li>Permite el acceso a tu cámara cuando se solicite</li>
                 <li>Colócate frente a la cámara con buena iluminación</li>
-                <li>Cuando veas "Listo para capturar", realiza el gesto</li>
+                <li>Cuando veas &quot;Listo para capturar&quot;, realiza el gesto</li>
                 <li>La grabación iniciará automáticamente al detectar tus manos</li>
                 <li>Mantén el gesto hasta que termine la captura</li>
                 <li>Puedes grabar múltiples muestras del mismo gesto</li>

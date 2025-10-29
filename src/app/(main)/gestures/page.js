@@ -7,6 +7,10 @@ export default function GesturesPage() {
   const [availableGestures, setAvailableGestures] = useState([]);
   const [isLoadingGestures, setIsLoadingGestures] = useState(true);
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => setIsClient(true), []);
+
   const {
     videoRef,
     isModelLoading,
@@ -16,7 +20,7 @@ export default function GesturesPage() {
     status,
     error,
     clearSentence,
-  } = useGestureRecognitionLSTM({
+  } = isClient ? useGestureRecognitionLSTM({
     threshold: 0,
     marginFrame: 1,
     delayFrames: 3,
@@ -24,7 +28,7 @@ export default function GesturesPage() {
     onPrediction: (prediction) => {
       console.log('Nueva predicción:', prediction);
     }
-  });
+  }) : {};
 
   // Cargar gestos dinámicamente desde el modelo
   useEffect(() => {
@@ -163,7 +167,7 @@ export default function GesturesPage() {
                   onClick={clearSentence}
                   className="text-main-dark/25 dark:text-main-light/35"
                 >
-                  <DeleteIcon className="w-8 h-8"/>
+                  <DeleteIcon className="w-8 h-8" />
                 </button>
               )}
             </div>
