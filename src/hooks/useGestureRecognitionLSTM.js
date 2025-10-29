@@ -18,7 +18,7 @@ export function useGestureRecognitionLSTM(options = {}) {
     marginFrame = MODEL_CONFIG.MARGIN_FRAME,
     delayFrames = MODEL_CONFIG.DELAY_FRAMES,
     minLengthFrames = MODEL_CONFIG.MIN_LENGTH_FRAMES,
-    maxSentenceLength = 6,
+    maxSentenceLength = 3, // Límite máximo de gestos en el historial
     onPrediction = null,
   } = options;
 
@@ -34,6 +34,10 @@ export function useGestureRecognitionLSTM(options = {}) {
   const countFrameRef = useRef(0);
   const fixFramesRef = useRef(0);
   const recordingRef = useRef(false);
+  
+  // Cooldown para evitar predicciones duplicadas
+  const lastPredictionRef = useRef({ wordId: null, timestamp: 0 });
+  const PREDICTION_COOLDOWN = 1500; // ms - tiempo mínimo entre predicciones del mismo gesto
 
   // Estado React
   const [isModelLoading, setIsModelLoading] = useState(true);
@@ -184,28 +188,39 @@ export function useGestureRecognitionLSTM(options = {}) {
         // pero mantener guiones en nombres de gestos (ej: "lo-siento", "como-estas")
         const wordId = label.replace(/-(der|izq|gen)$/, '');
         
-        // Buscar en diccionario o formatear automáticamente
-        const text = WORDS_TEXT[wordId] || 
-          wordId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        // Sistema de cooldown para evitar predicciones duplicadas
+        const now = Date.now();
+        const timeSinceLastPrediction = now - lastPredictionRef.current.timestamp;
+        const isSameGesture = lastPredictionRef.current.wordId === wordId;
+        
+        // Solo agregar si es un gesto diferente o si ha pasado el tiempo de cooldown
+        if (!isSameGesture || timeSinceLastPrediction > PREDICTION_COOLDOWN) {
+          // Buscar en diccionario o formatear automáticamente
+          const text = WORDS_TEXT[wordId] || 
+            wordId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-        const predictionResult = {
-          label,
-          wordId,
-          text,
-          confidence: confidence.toFixed(2),
-        };
+          const predictionResult = {
+            label,
+            wordId,
+            text,
+            confidence: confidence.toFixed(2),
+          };
 
-        setCurrentPrediction(predictionResult);
+          setCurrentPrediction(predictionResult);
 
-        // Actualizar frase
-        setSentence(prev => {
-          const newSentence = [text, ...prev];
-          return newSentence.slice(0, maxSentenceLength);
-        });
+          // Actualizar frase
+          setSentence(prev => {
+            const newSentence = [text, ...prev];
+            return newSentence.slice(0, maxSentenceLength);
+          });
 
-        // Callback opcional
-        if (onPrediction) {
-          onPrediction(predictionResult);
+          // Callback opcional
+          if (onPrediction) {
+            onPrediction(predictionResult);
+          }
+          
+          // Actualizar el timestamp de la última predicción
+          lastPredictionRef.current = { wordId, timestamp: now };
         }
 
       }

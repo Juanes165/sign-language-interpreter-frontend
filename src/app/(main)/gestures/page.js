@@ -20,7 +20,7 @@ export default function GesturesPage() {
     threshold: 0,
     marginFrame: 1,
     delayFrames: 3,
-    maxSentenceLength: 6,
+    maxSentenceLength: 3, // Límite máximo de gestos en el historial
     onPrediction: (prediction) => {
       console.log('Nueva predicción:', prediction);
     }
