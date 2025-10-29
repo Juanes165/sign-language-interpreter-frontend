@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# Google Drive credentials (security)
+*credentials*.json
+*-bb3744af7f68.json
+unavoz-bb3744af7f68.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -38,4 +43,4 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# next-env.d.ts

@@ -1,36 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🌐 Sign Language Interpreter - Frontend
 
-## Getting Started
+Sistema web de reconocimiento de gestos en lengua de señas con contribución colaborativa.
 
-First, run the development server:
+---
+
+## 📚 Documentación
+
+**3 guías esenciales organizadas en `docs/`:**
+
+1. **[Arquitectura del Sistema](docs/01_ARQUITECTURA_SISTEMA.md)** - Visión técnica completa ⚙️
+2. **[Guía de Configuración](docs/02_GUIA_CONFIGURACION.md)** - Setup y configuración 🔧
+3. **[Guía de Usuario](docs/03_GUIA_USUARIO.md)** - Cómo usar y contribuir 👤
+
+---
+
+## 🚀 Inicio Rápido
+
+### **Instalación**
 
 ```bash
+# Clonar repositorio
+git clone https://github.com/tu-usuario/sign-language-interpreter-frontend.git
+cd sign-language-interpreter-frontend
+
+# Instalar dependencias
+npm install
+
+# Ejecutar en desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### **Copiar Modelo Entrenado**
 
-## Learn More
+```bash
+# Desde el backend (gesto_releasev1)
+cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/
 
-To learn more about Next.js, take a look at the following resources:
+# Verificar archivos
+ls public/models/
+# Debe mostrar: model.json, weights.bin, words.json
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎯 Características
 
-## Deploy on Vercel
+### **Reconocimiento de Gestos** (`/gestures`)
+- 🎥 Reconocimiento en tiempo real
+- 🧠 Modelo LSTM con TensorFlow.js
+- 📊 18 gestos disponibles
+- 💯 Indicador de confianza
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### **Contribución Colaborativa** (`/contribute`)
+- 🤝 Captura de nuevos gestos
+- 📈 Estadísticas de usuario
+- ☁️ Sincronización automática con Google Drive
+- 🎯 18 gestos objetivo
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### **Abecedario** (`/alphabet`)
+- 📚 Señas estáticas (A-Z)
+- 🖼️ Imágenes de referencia
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+sign-language-interpreter-frontend/
+├── docs/                          # 📚 Documentación
+│   ├── 01_ARQUITECTURA_SISTEMA.md
+│   ├── 02_GUIA_CONFIGURACION.md
+│   └── 03_GUIA_USUARIO.md
+│
+├── src/
+│   ├── app/
+│   │   ├── (main)/
+│   │   │   ├── gestures/          # Reconocimiento
+│   │   │   ├── contribute/        # Contribución
+│   │   │   └── alphabet/          # Abecedario
+│   │   └── api/gestures/          # API Routes
+│   │
+│   ├── components/                # Componentes React
+│   ├── hooks/                     # Custom hooks
+│   └── lib/                       # Utilidades
+│
+├── public/
+│   └── models/        # Modelo LSTM
+│       ├── model.json
+│       ├── weights.bin
+│       └── words.json
+│
+├── unavoz-bb3744af7f68.json       # Credenciales Google Drive
+└── package.json
+```
+
+---
+
+## 🔧 Configuración de Google Drive
+
+### **1. Obtener Credenciales**
+- Crear Service Account en Google Cloud Console
+- Descargar credenciales como JSON
+- Copiar a la raíz del proyecto: `unavoz-bb3744af7f68.json`
+
+### **2. Compartir Carpeta**
+- Crear carpeta en Google Drive
+- Compartir con: `unavoz@unavoz.iam.gserviceaccount.com`
+- Permisos: **Editor**
+
+### **3. Configurar Folder ID**
+Editar `src/app/api/gestures/upload-to-drive/route.js`:
+
+```javascript
+const folderId = 'TU_FOLDER_ID_AQUI';
+```
+
+**[Ver guía completa →](docs/02_GUIA_CONFIGURACION.md#paso-3-configurar-google-drive-opcional)**
+
+---
+
+## 🎨 Tecnologías
+
+- **Framework:** Next.js 15
+- **UI:** React 19 + Tailwind CSS
+- **ML:** TensorFlow.js
+- **Computer Vision:** MediaPipe Holistic
+- **Cloud:** Google Drive API
+
+---
+
+## 📦 Comandos Disponibles
+
+```bash
+npm run dev      # Desarrollo (http://localhost:3000)
+npm run build    # Build para producción
+npm run start    # Iniciar producción
+npm run lint     # Linter
+```
+
+---
+
+## 🔗 Proyecto Relacionado
+
+**Backend (Entrenamiento):**  
+[gesto_releasev1](../gesto_releasev1/)
+- Captura de datos con Python
+- Entrenamiento del modelo LSTM
+- Conversión a TensorFlow.js
+
+---
+
+## 📖 Documentación Completa
+
+| Documento | Descripción |
+|-----------|-------------|
+| [Arquitectura](docs/01_ARQUITECTURA_SISTEMA.md) | Visión técnica del sistema |
+| [Configuración](docs/02_GUIA_CONFIGURACION.md) | Setup completo |
+| [Usuario](docs/03_GUIA_USUARIO.md) | Cómo usar el sistema |
+
+---
+
+## 📝 Licencia
+
+[Especificar licencia aquí]
+
+---
+
+**🎯 Sistema web de reconocimiento de gestos con contribución colaborativa**

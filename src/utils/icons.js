@@ -9,6 +9,25 @@ export function HandIcon(props) {
   )
 }
 
+export function HandsIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.396 10.867a1.227 1.227 0 0 1 1.69 0c.467.45.467 1.18 0 1.63l-1.126 1.085m-.564-2.715l1.127-1.086c.467-.45.467-1.18 0-1.63a1.227 1.227 0 0 0-1.69 0l-.845.815m1.408 1.9l-3.099 2.988m1.69-4.888a1.12 1.12 0 0 0 0-1.629a1.227 1.227 0 0 0-1.69 0l-4.768 4.596l.003-1.763c.001-.773-.696-1.374-1.493-1.287c-.61.066-1.098.522-1.186 1.108l-.563 4.452c-.107.851-.66 1.791-1.29 2.398m10.988-7.875l-2.818 2.716M12.353 22l.656-.632c.3-.29.707-.448 1.13-.475c.488-.031 1.134-.104 1.525-.272c.674-.29 1.287-.88 2.511-2.06l3.475-3.35a1.12 1.12 0 0 0 0-1.629a1.227 1.227 0 0 0-1.69 0m-2.536 2.444l2.535-2.444m-6.475-9.485a1.215 1.215 0 0 0 0-1.737a1.264 1.264 0 0 0-1.767 0L6.733 7.265l.004-1.884c.001-.825-.726-1.465-1.56-1.373a1.4 1.4 0 0 0-1.24 1.182L3.35 9.942c-.113.909-.691 1.91-1.349 2.558m11.484-8.403l.883-.869a1.264 1.264 0 0 1 1.767 0c.244.24.366.555.366.87m-3.016 0L11 6.54" />
+    </svg>
+  )
+}
+
+export function LetterIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.5">
+        <path d="M2 22V2m20 20V2" />
+        <path stroke-linejoin="round" d="m7 18l3.653-10.514c.292-.673.835-1.49 1.294-1.486c.68.005 1.036.708 1.43 1.486C13.772 8.266 17 18 17 18m-7.987-5.009l5.882-.062" />
+      </g>
+    </svg>
+  )
+}
+
 export function CameraIcon(props) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
@@ -73,6 +92,14 @@ export function MoonIcon(props) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
       <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21.5 14.078A8.557 8.557 0 0 1 9.922 2.5C5.668 3.497 2.5 7.315 2.5 11.873a9.627 9.627 0 0 0 9.627 9.627c4.558 0 8.376-3.168 9.373-7.422" color="currentColor" />
+    </svg>
+  )
+}
+
+export function DeleteIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
+      <path fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.5" d="m19.5 5.5l-.62 10.025c-.158 2.561-.237 3.842-.88 4.763a4 4 0 0 1-1.2 1.128c-.957.584-2.24.584-4.806.584c-2.57 0-3.855 0-4.814-.585a4 4 0 0 1-1.2-1.13c-.642-.922-.72-2.205-.874-4.77L4.5 5.5M3 5.5h18m-4.944 0l-.683-1.408c-.453-.936-.68-1.403-1.071-1.695a2 2 0 0 0-.275-.172C13.594 2 13.074 2 12.035 2c-1.066 0-1.599 0-2.04.234a2 2 0 0 0-.278.18c-.395.303-.616.788-1.058 1.757L8.053 5.5m1.447 11v-6m5 6v-6" />
     </svg>
   )
 }
