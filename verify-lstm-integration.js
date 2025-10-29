@@ -44,10 +44,10 @@ async function main() {
 
   // Modelo TFJS
   log('📦 Modelo TensorFlow.js:', 'blue');
-  allChecks &= checkDirectory('public/models/lstm_gestos', 'Directorio del modelo');
-  allChecks &= checkFile('public/models/lstm_gestos/model.json', 'Arquitectura del modelo');
-  allChecks &= checkFile('public/models/lstm_gestos/group1-shard1of1.bin', 'Pesos del modelo');
-  allChecks &= checkFile('public/models/lstm_gestos/words.json', 'Etiquetas de clases');
+  allChecks &= checkDirectory('public/models', 'Directorio del modelo');
+  allChecks &= checkFile('public/models/model.json', 'Arquitectura del modelo');
+  allChecks &= checkFile('public/models/group1-shard1of1.bin', 'Pesos del modelo');
+  allChecks &= checkFile('public/models/words.json', 'Etiquetas de clases');
 
   // Código fuente
   log('\n📝 Código fuente:', 'blue');
@@ -77,8 +77,8 @@ async function main() {
 
   // Verificar words.json
   log('\n🏷️  Etiquetas del modelo:', 'blue');
-  if (fs.existsSync('public/models/lstm_gestos/words.json')) {
-    const words = JSON.parse(fs.readFileSync('public/models/lstm_gestos/words.json', 'utf8'));
+  if (fs.existsSync('public/models/words.json')) {
+    const words = JSON.parse(fs.readFileSync('public/models/words.json', 'utf8'));
     if (words.word_ids && Array.isArray(words.word_ids)) {
       log(`✅ Etiquetas cargadas: ${words.word_ids.length} clases`, 'green');
       words.word_ids.forEach((word, idx) => {

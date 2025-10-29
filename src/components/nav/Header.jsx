@@ -1,6 +1,6 @@
 'use client';
 
-import Link from "next/link"
+import DeployableMenu, { DeployableMenuItem } from "./DeployableMenu";
 import { AppLogo } from "@/utils/icons"
 import { SunIcon, MoonIcon } from "@/utils/icons";
 
@@ -13,30 +13,61 @@ export default function Header() {
   }
 
   return (
-    <header className="border-main-dark/25 dark:border-main-light/25 h-16 py-1 px-6 flex flex-row justify-between items-center bg-violet-dark dark:bg-main-dark">
-      <AppLogo className="text-wisteria fill-wisteria h-10 md:h-14 lg:h-16" />
-      <button onClick={handleDarkMode} className="cursor-pointer">
+    <header className="border-b-[1px] dark:border-main-light/25 h-12 md:h-16 py-1 px-4 lg:px-12 flex flex-row justify-between bg-violet-dark items-center">
+      <div className="lg:hidden w-8 md:w-12" />
+      <AppLogo className="text-wisteria fill-wisteria h-10 md:h-14" />
 
-        <nav className="flex gap-6">
-          <Link
+      <DeployableMenu trigger={
+        <button className="flex flex-col space-y-1.5 cursor-pointer">
+          <span className="grow h-1.5 w-10 block rounded-full bg-wisteria"></span>
+          <span className="grow h-1.5 w-10 block rounded-full bg-wisteria"></span>
+          <span className="grow h-1.5 w-10 block rounded-full bg-wisteria"></span>
+        </button>
+      }>
+
+        <DeployableMenuItem >
+          <a
             href="/alphabet"
-            className="text-platinum hover:text-amethyst transition-colors font-semibold text-lg"
+            className="text-lg"
           >
-            Alfabeto
-          </Link>
-          <Link
+            Interpretador alfabético
+          </a>
+        </DeployableMenuItem>
+
+        <DeployableMenuItem >
+          <a
             href="/gestures"
-            className="text-platinum hover:text-amethyst transition-colors font-semibold text-lg"
+            className="text-lg"
           >
-            Gestos Dinámicos
-          </Link>
-        </nav>
+            Detección de señas
+          </a>
+        </DeployableMenuItem>
 
-        <div className="lg:hidden w-8 md:w-12" />
+        <DeployableMenuItem >
+          <button onClick={handleDarkMode} className="cursor-pointer w-full flex items-center space-x-3">
+            <SunIcon className='block dark:hidden w-8 h-8 text-wisteria' />
+            <MoonIcon className='hidden dark:block w-8 h-8 text-wisteria' />
+            <span className="block dark:hidden text-lg">Modo claro</span>
+            <span className="hidden dark:block text-lg">Modo oscuro</span>
+          </button>
+        </DeployableMenuItem>
+      </DeployableMenu>
 
-        <SunIcon className='block dark:hidden w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 text-wisteria' />
-        <MoonIcon className='hidden dark:block w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 text-wisteria' />
-      </button>
+
+      {/* <nav className="flex gap-6">
+        <a
+          href="/alphabet"
+          className="text-platinum hover:text-amethyst transition-colors font-semibold text-lg"
+        >
+          Alfabeto
+        </a>
+        <a
+          href="/gestures"
+          className="text-platinum hover:text-amethyst transition-colors font-semibold text-lg"
+        >
+          Gestos Dinámicos
+        </a>
+      </nav> */}
     </header>
   )
 }

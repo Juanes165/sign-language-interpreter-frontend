@@ -38,10 +38,10 @@ Abrir: [http://localhost:3000](http://localhost:3000)
 
 ```bash
 # Desde el backend (gesto_releasev1)
-cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/lstm_gestos/
+cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/
 
 # Verificar archivos
-ls public/models/lstm_gestos/
+ls public/models/
 # Debe mostrar: model.json, weights.bin, words.json
 ```
 
@@ -89,7 +89,7 @@ sign-language-interpreter-frontend/
 │   └── lib/                       # Utilidades
 │
 ├── public/
-│   └── models/lstm_gestos/        # Modelo LSTM
+│   └── models/        # Modelo LSTM
 │       ├── model.json
 │       ├── weights.bin
 │       └── words.json

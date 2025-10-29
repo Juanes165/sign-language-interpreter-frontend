@@ -117,10 +117,10 @@ Si ya tienes un modelo entrenado:
 
 ```bash
 # Copiar desde el backend
-cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/lstm_gestos/
+cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/
 
 # Verificar archivos
-ls public/models/lstm_gestos/
+ls public/models/
 # Debe mostrar: model.json, weights.bin, words.json
 ```
 
@@ -443,7 +443,7 @@ http://localhost:3000/gestures
 ```bash
 # Abrir consola del navegador (F12)
 # Debe mostrar:
-✅ Modelo LSTM cargado: /models/lstm_gestos/model.json
+✅ Modelo LSTM cargado: /models/model.json
 ✅ Gestos disponibles: 18
 ```
 
@@ -477,11 +477,11 @@ http://localhost:3000/gestures
 **Solución:**
 ```bash
 # Verificar que existan los archivos
-ls public/models/lstm_gestos/
+ls public/models/
 # Debe mostrar: model.json, weights.bin, words.json
 
 # Si faltan, copiar desde backend:
-cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/lstm_gestos/
+cp -r ../gesto_releasev1/models/modelo_tfjs_node/* public/models/
 ```
 
 ---

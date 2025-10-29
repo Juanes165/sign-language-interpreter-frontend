@@ -6,10 +6,9 @@ import { CameraIcon } from '@/utils/icons';
 export default function GesturesPage() {
   const [availableGestures, setAvailableGestures] = useState([]);
   const [isLoadingGestures, setIsLoadingGestures] = useState(true);
-  
+
   const {
     videoRef,
-    canvasRef,
     isModelLoading,
     isWebcamReady,
     currentPrediction,
@@ -18,11 +17,10 @@ export default function GesturesPage() {
     error,
     clearSentence,
   } = useGestureRecognitionLSTM({
-    threshold: 0.7,
+    threshold: 0,
     marginFrame: 1,
     delayFrames: 3,
     maxSentenceLength: 6,
-    enableSpeech: false, // Cambiar a true para habilitar TTS
     onPrediction: (prediction) => {
       console.log('Nueva predicción:', prediction);
     }
@@ -32,10 +30,10 @@ export default function GesturesPage() {
   useEffect(() => {
     async function loadGestures() {
       try {
-        const response = await fetch('/models/lstm_gestos/words.json');
+        const response = await fetch('/models/words.json');
         const data = await response.json();
         setAvailableGestures(data.word_ids || ['hola', 'bien', 'adios', 'como-estas']);
-        
+
         console.log('✅ Gestos cargados:', data.word_ids);
       } catch (error) {
         console.error('Error cargando gestos:', error);
@@ -45,23 +43,27 @@ export default function GesturesPage() {
         setIsLoadingGestures(false);
       }
     }
-    
+
     loadGestures();
   }, []);
 
+  console.log(sentence)
+
   return (
     <>
-      <div className="text-amethyst text-4xl md:text-5xl text-center w-full font-semibold mt-8 mb-2">
-        RECONOCIMIENTO DE GESTOS DINÁMICOS
-      </div>
-      
-      <div className="px-8 md:px-20 py-8 flex flex-col lg:flex-row space-x-10 justify-between">
+      <h1 className="text-amethyst text-2xl md:text-4xl text-center w-full font-semibold py-3 md:py-4">
+        {"> Reconocimiento de señas <"}
+      </h1>
+
+      <div className="px-12 md:px-20 pb-8 flex flex-col lg:flex-row space-x-10 justify-between">
+
+
         {/* CÁMARA Y VIDEO */}
-        <section className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark rounded-4xl overflow-hidden">
-          
+        <section className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark dark:bg-main-light/5 rounded-3xl md:rounded-4xl shadow-md/50 dark:shadow-sm dark:shadow-main-light">
+
           {/* Loading State */}
           {(isModelLoading || !isWebcamReady) && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-platinum flex flex-col items-center z-20">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-platinum flex flex-col items-center">
               <CameraIcon className="text-platinum w-40 h-40" />
               <span className="text-3xl text-center font-semibold mt-4">
                 {isModelLoading ? 'Cargando modelo LSTM...' : 'Iniciando cámara...'}
@@ -79,104 +81,82 @@ export default function GesturesPage() {
           {/* Video */}
           <video
             ref={videoRef}
-            className="absolute top-0 left-0 w-full h-full object-cover"
+            className={`${!isWebcamReady ? 'hidden' : 'block'} absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
             autoPlay
             playsInline
-            muted
-            style={{ transform: 'scaleX(-1)' }}
           />
 
-          {/* Canvas para landmarks (opcional) */}
-          <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 w-full h-full z-10"
-            width={640}
-            height={480}
-            style={{ transform: 'scaleX(-1)' }}
-          />
-
-          {/* Overlay superior - Frase acumulada */}
-          <div className="absolute top-0 left-0 right-0 bg-red-600 bg-opacity-90 px-4 py-2 z-20">
-            <p className="text-white text-xl font-semibold text-center truncate">
-              {sentence.length > 0 ? sentence.join(' | ') : 'Esperando gestos...'}
-            </p>
-          </div>
-
-          {/* Overlay inferior - Estado y última predicción */}
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 px-4 py-3 z-20">
-            <div className="flex justify-between items-center">
-              <span className="text-green-400 text-lg font-medium">
-                {status}
-              </span>
-              {currentPrediction && (
-                <span className="text-white text-lg font-semibold">
-                  {currentPrediction.spokenText} ({(currentPrediction.confidence * 100).toFixed(0)}%)
+          {/* OVERLAY FOR STATUS */}
+          {isWebcamReady && (
+            <div className="absolute top-0 left-0 h-10 m-4 z-2">
+              <div className="w-full h-full bg-main-light/70 dark:bg-main-dark/35 backdrop-blur-sm rounded-2xl md:rounded-3xl flex px-6 py-0 items-center justify-center">
+                <span className="text-green-400 text-lg font-medium">
+                  {status}
                 </span>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
-        {/* PANEL DERECHO - Información */}
-        <section className="flex flex-col w-full pt-6 max-w-md justify-start items-center self-center space-y-6">
-          
-          {/* Predicción actual */}
-          <div className="bg-main-dark rounded-3xl p-6 w-full">
-            <h3 className="text-amethyst text-2xl font-bold mb-4 text-center">
-              Última Predicción
-            </h3>
+
+        {/* RIGTH PANEL, PREDICTIONS AND INFORMATION */}
+        <section className="flex flex-col w-full pt-4 lg:max-w-80 2xl:max-w-96 justify-center items-center self-center">
+
+          {/* CURRENT PREDICTION */}
+          <div className="rounded-3xl w-full">
+
             {currentPrediction ? (
-              <div className="text-center space-y-4">
-                <p className="text-platinum text-5xl font-bold">
-                  {currentPrediction.spokenText}
-                </p>
-                <p className="text-wisteria text-3xl">
-                  {(currentPrediction.confidence * 100).toFixed(0)}%
-                </p>
-                
-                {/* Barra de progreso de confianza */}
-                <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-300 ${
-                      currentPrediction.confidence > 0.8 ? 'bg-green-500' :
-                      currentPrediction.confidence > 0.6 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${(currentPrediction.confidence * 100)}%` }}
-                  />
+              <>
+                <div className="text-center flex items-center justify-between">
+
+                  <span className="text-3xl font-semibold text-amethyst flex w-56 h-24 items-center justify-center">
+                    {currentPrediction?.text}
+                  </span>
+
+                  <span className="text-wisteria text-3xl w-20 font-semibold">
+                    {(currentPrediction?.confidence * 100).toFixed(0) || 0}%
+                  </span>
+
+                  {/* Barra de progreso de confianza */}
+                  <div className="w-4 bg-platinum rounded-full h-20 overflow-hidden flex flex-col justify-end">
+                    <div
+                      className={`transition-all duration-300 ${currentPrediction?.confidence > 0.8 ? 'bg-green-500' :
+                        currentPrediction?.confidence > 0.5 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                      style={{ height: `${(currentPrediction?.confidence * 100)}%` }}
+                    />
+                  </div>
+
                 </div>
-                
+
                 {/* Indicador de confianza por color */}
                 <div className="flex items-center justify-center gap-2 text-sm">
-                  {currentPrediction.confidence > 0.8 && (
-                    <span className="bg-green-500 bg-opacity-20 text-green-400 px-3 py-1 rounded-full">
+                  {currentPrediction?.confidence > 0.8 && (
+                    <span className="bg-green-200 bg-opacity-20 text-green-500 px-3 py-1 rounded-full">
                       ✓ Alta confianza
                     </span>
                   )}
-                  {currentPrediction.confidence > 0.6 && currentPrediction.confidence <= 0.8 && (
-                    <span className="bg-yellow-500 bg-opacity-20 text-yellow-400 px-3 py-1 rounded-full">
+                  {currentPrediction?.confidence > 0.6 && currentPrediction?.confidence <= 0.8 && (
+                    <span className="bg-yellow-200 bg-opacity-20 text-yellow-500 px-3 py-1 rounded-full">
                       ⚠ Media confianza
                     </span>
                   )}
-                  {currentPrediction.confidence <= 0.6 && (
-                    <span className="bg-red-500 bg-opacity-20 text-red-400 px-3 py-1 rounded-full">
+                  {currentPrediction?.confidence <= 0.6 && (
+                    <span className="bg-red-200 bg-opacity-20 text-red-500 px-3 py-1 rounded-full">
                       ✗ Baja confianza
                     </span>
                   )}
                 </div>
-                
-                <p className="text-gray-400 text-xs">
-                  ID: {currentPrediction.label}
-                </p>
-              </div>
+              </>
             ) : (
-              <p className="text-gray-400 text-center text-lg">
-                Realiza un gesto para ver la predicción
-              </p>
+              <div className="h-24 flex items-center text-lg px-12 bg-platinum/35 dark:bg-platinum/15 rounded-lg">
+                <span className='text-center'>Realiza un gesto para ver la predicción</span>
+              </div>
             )}
           </div>
 
           {/* Frase acumulada */}
-          <div className="bg-main-dark rounded-3xl p-6 w-full">
+          <div className="bg-main-dark mt-8 h-64 rounded-3xl p-6 w-full">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-amethyst text-2xl font-bold">
                 Frase Capturada
@@ -209,7 +189,7 @@ export default function GesturesPage() {
           </div>
 
           {/* Instrucciones */}
-          <div className="bg-main-dark rounded-3xl p-6 w-full">
+          {/* <div className="bg-main-dark rounded-3xl p-6 w-full">
             <h3 className="text-amethyst text-xl font-bold mb-3">
               📋 Instrucciones
             </h3>
@@ -222,16 +202,15 @@ export default function GesturesPage() {
               <li>Usa &quot;Limpiar&quot; para resetear la frase</li>
             </ul>
             
-            {/* Indicador de calidad de iluminación */}
             <div className="mt-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
               <p className="text-blue-200 text-xs">
                 💡 <strong>Tip:</strong> Asegúrate de tener buena iluminación para mejor reconocimiento
               </p>
             </div>
-          </div>
+          </div> */}
 
           {/* Gestos disponibles */}
-          <div className="bg-main-dark rounded-3xl p-6 w-full">
+          {/* <div className="bg-main-dark rounded-3xl p-6 w-full">
             <h3 className="text-amethyst text-xl font-bold mb-3">
               ✋ Gestos Disponibles
             </h3>
@@ -255,7 +234,8 @@ export default function GesturesPage() {
                 )}
               </div>
             )}
-          </div>
+          </div> */}
+
         </section>
       </div>
     </>

@@ -9,7 +9,7 @@ const path = require('path');
 console.log('🔍 Verificando configuración del modelo LSTM...\n');
 
 // Verificar archivos requeridos
-const modelDir = path.join(__dirname, 'public', 'models', 'lstm_gestos');
+const modelDir = path.join(__dirname, 'public', 'models');
 const requiredFiles = ['model.json', 'words.json', 'group1-shard1of2.bin', 'group1-shard2of2.bin'];
 
 let allFilesExist = true;

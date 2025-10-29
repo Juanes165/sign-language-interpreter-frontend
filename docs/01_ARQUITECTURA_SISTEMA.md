@@ -43,7 +43,7 @@ Sistema web de reconocimiento de gestos en lengua de señas con contribución co
    🧠 .npy → LSTM → modelo_tfjs_node/
 
 5. DESPLIEGUE (Copy to Frontend)
-   📦 Modelo → public/models/lstm_gestos/
+   📦 Modelo → public/models/
    🌐 Predicciones en tiempo real
 ```
 
@@ -95,10 +95,9 @@ sign-language-interpreter-frontend/
 ├── 📂 public/
 │   └── models/
 │       ├── gesture_recognizer.task      # MediaPipe (no usado)
-│       └── lstm_gestos/
-│           ├── model.json               # Modelo LSTM
-│           ├── weights.bin              # Pesos del modelo
-│           └── words.json               # Lista de gestos
+│       ├── model.json                   # Modelo LSTM
+│       ├── weights.bin                  # Pesos del modelo
+│       └── words.json                   # Lista de gestos
 │
 ├── 📂 docs/                             # Documentación
 │   ├── 01_ARQUITECTURA_SISTEMA.md       ← Estás aquí
@@ -119,7 +118,7 @@ sign-language-interpreter-frontend/
 **Archivo:** `src/app/(main)/gestures/page.js`
 
 **Funcionalidades:**
-- Carga modelo LSTM desde `/public/models/lstm_gestos/`
+- Carga modelo LSTM desde `/public/models/`
 - Captura video en tiempo real (640×480, 30 FPS)
 - Extrae keypoints con MediaPipe Holistic
 - Procesa secuencias de 15 frames
@@ -263,8 +262,8 @@ Output: 18 clases (Softmax)
 ```javascript
 import * as tf from '@tensorflow/tfjs';
 
-const model = await tf.loadLayersModel('/models/lstm_gestos/model.json');
-const words = await fetch('/models/lstm_gestos/words.json').then(r => r.json());
+const model = await tf.loadLayersModel('/models/model.json');
+const words = await fetch('/models/words.json').then(r => r.json());
 ```
 
 ### **Predicción**

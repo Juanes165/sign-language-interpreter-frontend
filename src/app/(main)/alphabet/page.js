@@ -299,7 +299,9 @@ export default function AlphabetHome() {
 
   return (
     <>
-      <div className="text-amethyst text-2xl md:text-4xl lg:text-5xl text-center w-full font-semibold py-3 md:py-4 lg:py-8">{"> Interpretador <"}</div>
+      <h1 className="text-amethyst text-2xl md:text-4xl text-center w-full font-semibold py-3 md:py-4">
+        {"> Interpretador alfabético <"}
+      </h1>
       <div className="px-12 md:px-20 pb-8 flex flex-col lg:flex-row space-x-10 justify-between">
         {/* {window.screen.width + 'x' + window.screen.height}
         {window.innerWidth + 'x' + window.innerHeight} */}
@@ -349,7 +351,7 @@ export default function AlphabetHome() {
 
 
         {/* RIGHT DIV, WORDS AND PREDICTIONS */}
-        <section className="flex flex-col w-full pt-4 lg:max-w-80 2xl:max-w-96 justify-center items-center self-center ">
+        <section className="flex flex-col w-full pt-4 lg:max-w-80 2xl:max-w-96 justify-center items-center self-center">
 
           {/* SHOWING THE PREDICTIONS */}
           <div className="hidden lg:flex px-4 space-x-2 items-center justify-between">
