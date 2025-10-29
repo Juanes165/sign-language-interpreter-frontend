@@ -153,7 +153,7 @@ export default function GesturesMainComponent() {
           </div>
 
           {/* Frase acumulada */}
-          <div className="mt-8 h-60 py-2 px-4 w-full border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10">
+          <div className="mt-8 h-50 py-2 px-4 w-full border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10">
             <div className="flex justify-between items-center">
               <h3 className="text-amethyst text-xl font-bold">
                 Historial
@@ -167,7 +167,7 @@ export default function GesturesMainComponent() {
                 </button>
               )}
             </div>
-            <div className="space-y-0 mb-2 overflow-y-auto h-48">
+            <div className="space-y-0 mb-2 overflow-y-auto h-44">
               {sentence.length > 0 ? (
                 sentence.map((word, idx) => (
                   <div
