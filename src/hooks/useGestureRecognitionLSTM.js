@@ -18,7 +18,7 @@ export function useGestureRecognitionLSTM(options = {}) {
     marginFrame = MODEL_CONFIG.MARGIN_FRAME,
     delayFrames = MODEL_CONFIG.DELAY_FRAMES,
     minLengthFrames = MODEL_CONFIG.MIN_LENGTH_FRAMES,
-    maxSentenceLength = 3, // Límite máximo de gestos en el historial
+    maxSentenceLength = 10, // Límite máximo de gestos en el historial
     onPrediction = null,
   } = options;
 
