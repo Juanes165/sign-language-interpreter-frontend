@@ -2,7 +2,7 @@
 
 import DeployableMenu, { DeployableMenuItem } from "./DeployableMenu";
 import { AppLogo } from "@/utils/icons"
-import { SunIcon, MoonIcon } from "@/utils/icons";
+import { SunIcon, MoonIcon, HandsIcon, LetterIcon } from "@/utils/icons";
 
 export default function Header() {
 
@@ -26,20 +26,16 @@ export default function Header() {
       }>
 
         <DeployableMenuItem >
-          <a
-            href="/alphabet"
-            className="text-lg"
-          >
+          <LetterIcon className=" w-8 h-8 text-wisteria" />
+          <a href="/alphabet"className="text-lg">
             Interpretador alfabético
           </a>
         </DeployableMenuItem>
 
         <DeployableMenuItem >
-          <a
-            href="/gestures"
-            className="text-lg"
-          >
-            Detección de señas
+          <HandsIcon className=" w-8 h-8 text-wisteria" />
+          <a href="/gestures" className="text-lg">
+            Reconocimiento de señas
           </a>
         </DeployableMenuItem>
 
@@ -47,8 +43,8 @@ export default function Header() {
           <button onClick={handleDarkMode} className="cursor-pointer w-full flex items-center space-x-3">
             <SunIcon className='block dark:hidden w-8 h-8 text-wisteria' />
             <MoonIcon className='hidden dark:block w-8 h-8 text-wisteria' />
-            <span className="block dark:hidden text-lg">Modo claro</span>
-            <span className="hidden dark:block text-lg">Modo oscuro</span>
+            <span className="block dark:hidden text-lg">Modo oscuro</span>
+            <span className="hidden dark:block text-lg">Modo claro</span>
           </button>
         </DeployableMenuItem>
       </DeployableMenu>

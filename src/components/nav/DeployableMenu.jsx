@@ -20,7 +20,7 @@ export default function DeployableMenu({ children, trigger}) {
 
 export function DeployableMenuItem({ children }) {
   return (
-    <li className="flex gap-3 items-center px-4 py-2 hover:bg-platinum cursor-pointer">
+    <li className="flex gap-3 items-center px-4 py-2 hover:bg-platinum dark:hover:bg-main-light/15 cursor-pointer">
       {children}
     </li>
   )

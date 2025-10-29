@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useGestureRecognitionLSTM } from '@/hooks/useGestureRecognitionLSTM';
-import { CameraIcon } from '@/utils/icons';
+import { CameraIcon, DeleteIcon } from '@/utils/icons';
 
 export default function GesturesPage() {
   const [availableGestures, setAvailableGestures] = useState([]);
@@ -20,7 +20,7 @@ export default function GesturesPage() {
     threshold: 0,
     marginFrame: 1,
     delayFrames: 3,
-    maxSentenceLength: 3, // Límite máximo de gestos en el historial
+    maxSentenceLength: 10,
     onPrediction: (prediction) => {
       console.log('Nueva predicción:', prediction);
     }
@@ -47,8 +47,6 @@ export default function GesturesPage() {
     loadGestures();
   }, []);
 
-  console.log(sentence)
-
   return (
     <>
       <h1 className="text-amethyst text-2xl md:text-4xl text-center w-full font-semibold py-3 md:py-4">
@@ -56,7 +54,6 @@ export default function GesturesPage() {
       </h1>
 
       <div className="px-12 md:px-20 pb-8 flex flex-col lg:flex-row space-x-10 justify-between">
-
 
         {/* CÁMARA Y VIDEO */}
         <section className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark dark:bg-main-light/5 rounded-3xl md:rounded-4xl shadow-md/50 dark:shadow-sm dark:shadow-main-light">
@@ -136,12 +133,12 @@ export default function GesturesPage() {
                       ✓ Alta confianza
                     </span>
                   )}
-                  {currentPrediction?.confidence > 0.6 && currentPrediction?.confidence <= 0.8 && (
+                  {currentPrediction?.confidence > 0.5 && currentPrediction?.confidence <= 0.8 && (
                     <span className="bg-yellow-200 bg-opacity-20 text-yellow-500 px-3 py-1 rounded-full">
                       ⚠ Media confianza
                     </span>
                   )}
-                  {currentPrediction?.confidence <= 0.6 && (
+                  {currentPrediction?.confidence <= 0.5 && (
                     <span className="bg-red-200 bg-opacity-20 text-red-500 px-3 py-1 rounded-full">
                       ✗ Baja confianza
                     </span>
@@ -156,28 +153,28 @@ export default function GesturesPage() {
           </div>
 
           {/* Frase acumulada */}
-          <div className="bg-main-dark mt-8 h-64 rounded-3xl p-6 w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-amethyst text-2xl font-bold">
-                Frase Capturada
+          <div className="mt-8 h-60 py-2 px-4 w-full border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10">
+            <div className="flex justify-between items-center">
+              <h3 className="text-amethyst text-xl font-bold">
+                Historial
               </h3>
               {sentence.length > 0 && (
                 <button
                   onClick={clearSentence}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  className="text-main-dark/25 dark:text-main-light/35"
                 >
-                  Limpiar
+                  <DeleteIcon className="w-8 h-8"/>
                 </button>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-0 mb-2 overflow-y-auto h-48">
               {sentence.length > 0 ? (
                 sentence.map((word, idx) => (
                   <div
                     key={idx}
-                    className="bg-wisteria bg-opacity-20 text-platinum px-4 py-2 rounded-lg text-lg font-medium"
+                    className="bg-opacity-20 px-6 py-1 rounded-lg text-lg font-medium"
                   >
-                    {idx + 1}. {word}
+                    {word}
                   </div>
                 ))
               ) : (

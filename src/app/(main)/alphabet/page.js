@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from "react";
 import { FilesetResolver, GestureRecognizer } from "@mediapipe/tasks-vision";
-import { ToggleSwitch, NumberInput } from "@/components/common";
 import { getVideoConstraints } from "@/lib";
 import { HandIcon, CameraIcon, LandmarksLogo, LandmarksPointsLogo } from "@/utils/icons";
 
@@ -369,18 +368,20 @@ export default function AlphabetHome() {
             <div className="flex flex-col justify-center">
 
               <span
-                className="w-auto min-w-60 text-3xl text-center py-2 rounded-md bg-wisteria/25 dark:bg-amethyst/75 truncate shadow-sm"
+                className="w-auto min-w-60 text-3xl text-center py-2 rounded-md cursor-pointer bg-wisteria/25 hover:bg-wisteria/40 dark:bg-amethyst/75 dark:hover:bg-amethyst/90 truncate shadow-sm"
                 onClick={() => updateWordWithSuggestion(currentWord)}
               >
                 {currentWord || '—'}
               </span>
 
-              <div className="flex flex-row bg-platinum/25 dark:bg-platinum/10 mx-1.5 rounded-b-lg shadow-md">
+              <div className="flex flex-row bg-platinum/25 dark:bg-platinum/10 mx-1.5 rounded-b-lg shadow-md overflow-hidden">
                 {wordSuggestions.map((word, index) => (
                   <span
                     key={index}
                     style={{ direction: 'rtl' }}
-                    className={`flex-1 h-7 text-base xs:text-lg text-center overflow-hidden whitespace-nowrap my-2 px-2 border-platinum ${index && 'border-platinum border-l'}`}
+                    className={`flex-1 h-12 text-base xs:text-lg text-center overflow-hidden whitespace-nowrap 
+                      py-2 px-2 cursor-pointer hover:bg-platinum dark:hover:bg-main-light/15 transition-colors duration-200
+                      ${index && 'border-platinum border-l'}`}
                     onClick={() => updateWordWithSuggestion(word)}
                   >
                     {word || ' '}
