@@ -272,7 +272,6 @@ export function useGestureRecognitionLSTM(options = {}) {
       holisticRef.current = holistic;
 
       setIsHolisticReady(true);
-      setStatus('MediaPipe listo');
     } catch (err) {
       console.error('❌ Error inicializando Holistic:', err);
       setError('Error al inicializar MediaPipe Holistic');

@@ -167,7 +167,7 @@ export default function GesturesMainComponent() {
                 </button>
               )}
             </div>
-            <div className="space-y-0 mb-2 overflow-y-auto h-44">
+            <div className="space-y-0 mb-2 overflow-y-auto h-34">
               {sentence.length > 0 ? (
                 sentence.map((word, idx) => (
                   <div
