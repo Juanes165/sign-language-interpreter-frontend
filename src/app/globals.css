@@ -3,7 +3,6 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  min-height: 100vh;
   --background: radial-gradient(circle at bottom left,
       rgba(139, 99, 218, 0.6) 0%,
       rgba(249, 248, 253, 0.5) 20%,
@@ -12,15 +11,10 @@
       #F9F8FD 80%,
       /* #F3EEFB 80%, */
       #8B63DA 100%);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
   --text-color: #070D1F;
-  scrollbar-width: thin;
 }
 
 :root.dark {
-  min-height: 100vh;
   --background: radial-gradient(circle at bottom left,
       rgba(89, 29, 169, 0.6) 0%,
       rgba(7, 13, 31, 0.5) 20%,
@@ -29,11 +23,7 @@
       #070D1F 80%,
       /* #F3EEFB 80%, */
       #591DA9 100%);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
   --text-color: #F9F8FD;
-  scrollbar-width: thin;
 }
 
 @theme inline {
@@ -57,5 +47,11 @@
 body {
   background: var(--background);
   color: var(--text-color);
+  min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  scrollbar-width: thin;
 }
