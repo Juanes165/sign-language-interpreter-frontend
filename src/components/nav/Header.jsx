@@ -13,9 +13,11 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b-[1px] dark:border-main-light/25 h-12 md:h-16 py-1 px-4 lg:px-12 flex flex-row justify-between bg-violet-dark items-center">
+    <header className="border-b dark:border-main-light/25 h-12 md:h-16 py-1 px-4 lg:px-12 flex flex-row justify-between bg-violet-dark items-center">
       <div className="lg:hidden w-8 md:w-12" />
-      <AppLogo className="text-wisteria fill-wisteria h-10 md:h-14" />
+      <a href="/" className="cursor-pointer">
+        <AppLogo className="text-wisteria fill-wisteria h-10 md:h-14" />
+      </a>
 
       <DeployableMenu trigger={
         <button className="flex flex-col space-y-1.5 cursor-pointer">
