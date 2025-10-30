@@ -240,7 +240,7 @@ export default function GesturesMainComponent() {
 
       <div className='w-full flex items-center justify-center'>
         <span className='text-center text-balance'>
-          <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos un total de 18 señas oficiales de la LSC. Para ver las señas disponibles haz click <span onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</span>
+          <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos un total de {supportedSignsInfo.listOfItems.length} señas oficiales de la LSC. Para ver las señas disponibles haz click <span onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</span>
         </span>
       </div>
 
