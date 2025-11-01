@@ -49,7 +49,7 @@ export default function GesturesMainComponent() {
   }, []);
 
   return (
-    <div className='pb-8 relative'>
+    <div className='pb-4 lg:pb-8 relative'>
       <h1 className="text-amethyst text-2xl md:text-4xl text-center w-full font-semibold py-3 md:py-4">
         {"> Reconocimiento de señas <"}
       </h1>

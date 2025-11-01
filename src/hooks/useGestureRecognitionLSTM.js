@@ -247,8 +247,8 @@ export function useGestureRecognitionLSTM(options = {}) {
    */
   const initializeHolistic = useCallback(async () => {
     try {
-      setStatus('Inicializando MediaPipe Holistic...');
-      console.log('🔧 Inicializando MediaPipe Holistic...');
+      // setStatus('Inicializando MediaPipe Holistic...');
+      // console.log('🔧 Inicializando MediaPipe Holistic...');
 
       // Importar MediaPipe dinámicamente (solo en cliente)
       const { Holistic } = await import('@mediapipe/holistic');

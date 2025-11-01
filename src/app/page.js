@@ -64,7 +64,7 @@ export default function Home() {
         </section>
 
       </main>
-      <footer className="flex flex-col items-center justify-center pb-4 mt-8">
+      <footer className="flex flex-col items-center justify-center pb-4 mt-16 lg:mt-8">
         <span className="text-sm text-center">
           Desarrollado con ❤️ por&nbsp;
           <span className="font-bold">Geider M. y Esteban B.</span>
