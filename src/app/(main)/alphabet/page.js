@@ -315,7 +315,7 @@ export default function AlphabetHome() {
             </div>
           )}
           <video
-            className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
+            className={`${loadingWebcam ? 'hidden' : 'block'} scale-x-[-1] absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
             ref={videoRef}
             autoPlay
             playsInline
