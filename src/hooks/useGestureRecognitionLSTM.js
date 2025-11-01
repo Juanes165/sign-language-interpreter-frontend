@@ -6,6 +6,7 @@ import {
   MODEL_CONFIG,
   WORDS_TEXT
 } from '@/lib/gestureRecognitionLSTM';
+import { getVideoConstraints } from '@/lib';
 
 /**
  * Hook personalizado para reconocimiento de gestos con LSTM
@@ -290,11 +291,12 @@ export function useGestureRecognitionLSTM(options = {}) {
 
     try {
       setStatus('Solicitando permisos de cámara...');
-      console.log('📷 Solicitando acceso a cámara...');
+      // console.log('📷 Solicitando acceso a cámara...');
+      const videoConstraints = getVideoConstraints();
 
       // Usar getUserMedia nativo en lugar de @mediapipe/camera_utils
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: videoConstraints,
         audio: false
       });
 

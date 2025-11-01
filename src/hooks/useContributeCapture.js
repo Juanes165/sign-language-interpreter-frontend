@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { uploadToDrive, saveToBackend } from '@/lib/saveToBackend';
+import { getVideoConstraints } from '@/lib';
 
 /**
  * Hook para capturar gestos en la página de contribución
@@ -413,13 +414,14 @@ export function useContributeCapture(options = {}) {
     }
 
     try {
-      setStatus('Solicitando permisos de cámara...');
-      console.log('📷 Solicitando acceso a cámara...');
+      setStatus('Solicitando permisos de cámaraaaaaaaa...');
+      // console.log('📷 Solicitando acceso a cámara...');
+      const videoConstraints = getVideoConstraints();
+      console.log(videoConstraints)
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          width: 640, 
-          height: 480,
+          ...videoConstraints,
           frameRate: { ideal: 30, max: 30 }  // ← Añadir esto
         },
         audio: false

@@ -149,11 +149,11 @@ export default function GestureCapture({ gesture, onBack }) {
       </div>
 
       {/* Camera View */}
-      <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-6">
+      <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-6 rounded-3xl md:rounded-4xl">
         {/* Video oculto (solo para MediaPipe) */}
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover hidden"
+          className={`${!isWebcamReady ? 'hidden' : 'block'} scale-x-[-1] absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
           autoPlay
           playsInline
           muted
