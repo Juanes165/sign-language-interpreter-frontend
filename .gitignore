@@ -25,9 +25,9 @@
 *.pem
 
 # Google Drive credentials (security)
-*credentials*.json
-*-bb3744af7f68.json
-unavoz-bb3744af7f68.json
+# *credentials*.json
+# *-bb3744af7f68.json
+# unavoz-bb3744af7f68.json
 
 # debug
 npm-debug.log*
