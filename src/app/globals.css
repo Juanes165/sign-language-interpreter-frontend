@@ -3,10 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: radial-gradient(circle at bottom left,
+  --background: 
+  /* radial-gradient(circle at bottom left,
       rgba(139, 99, 218, 0.6) 0%,
       rgba(249, 248, 253, 0.5) 20%,
-      transparent 90%),
+      transparent 90%), */
     linear-gradient(210deg,
       #F9F8FD 80%,
       /* #F3EEFB 80%, */
@@ -15,13 +16,13 @@
 }
 
 :root.dark {
-  --background: radial-gradient(circle at bottom left,
+  --background: 
+  /* radial-gradient(circle at center,
       rgba(89, 29, 169, 0.6) 0%,
       rgba(7, 13, 31, 0.5) 20%,
-      transparent 90%),
-    linear-gradient(210deg,
-      #070D1F 80%,
-      /* #F3EEFB 80%, */
+      transparent 90%), */
+    linear-gradient(180deg,
+      #070D1F 85%,
       #591DA9 100%);
   --text-color: #F9F8FD;
 }

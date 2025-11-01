@@ -320,7 +320,7 @@ export default function AlphabetHome() {
             autoPlay
             playsInline
           />
-          <canvas className={`${loadingWebcam ? 'hidden' : 'block'} absolute top-0 left-0 w-full h-full z-1 rounded-3xl md:rounded-4xl bg-transparent`} ref={canvasRef}></canvas>
+          <canvas className={`${loadingWebcam ? 'hidden' : 'block'} scale-x-[-1] absolute top-0 left-0 w-full h-full z-1 rounded-3xl md:rounded-4xl bg-transparent`} ref={canvasRef}></canvas>
 
 
           {/* BUTTON TO SHOW LANDMARKS */}
