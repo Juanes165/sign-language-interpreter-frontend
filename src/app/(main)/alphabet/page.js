@@ -225,7 +225,7 @@ export default function AlphabetHome() {
 
         const videoConstraints = getVideoConstraints();
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, facingMode: "user", frameRate: 24 } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, facingMode: "user", frameRate: { ideal: 30, max: 30 } } });
 
         videoRef.current.srcObject = stream;
 

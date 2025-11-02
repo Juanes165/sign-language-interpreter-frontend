@@ -296,7 +296,10 @@ export function useGestureRecognitionLSTM(options = {}) {
 
       // Usar getUserMedia nativo en lugar de @mediapipe/camera_utils
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
+        video: { 
+          ...videoConstraints,
+          frameRate: { ideal: 30, max: 30 }  // 30 FPS
+        },
         audio: false
       });
 
