@@ -3,6 +3,7 @@ import {
   extractKeypoints,
   handDetected,
   normalizeKeypoints,
+  normalizeKeypointsSequence,
   MODEL_CONFIG,
   WORDS_TEXT
 } from '@/lib/gestureRecognitionLSTM';
@@ -27,8 +28,10 @@ export function useGestureRecognitionLSTM(options = {}) {
   const videoRef = useRef(null);
   const holisticRef = useRef(null);
   const cameraRef = useRef(null);
+  const animationFrameIdRef = useRef(null);
   const modelRef = useRef(null);
   const labelsRef = useRef([]);
+  const normalizationStatsRef = useRef(null);
 
   // Estado de captura
   const keypointsSequenceRef = useRef([]);
@@ -61,17 +64,14 @@ export function useGestureRecognitionLSTM(options = {}) {
   }, []);
 
   /**
-   * Carga el modelo TFJS y las etiquetas
+   * Carga el modelo TFJS, las etiquetas y las estadísticas de normalización
    */
   const loadModel = useCallback(async () => {
     try {
       setIsModelLoading(true);
       setStatus('Cargando modelo LSTM...');
 
-      // Importar TensorFlow.js dinámicamente (solo en cliente)
       const tf = await import('@tensorflow/tfjs');
-      // Cargar modelo TensorFlow.js (GraphModel, no LayersModel)
-      // El modelo generado desde SavedModel es un GraphModel
       const model = await tf.loadLayersModel('/models/model.json');
       modelRef.current = model;
 
@@ -80,11 +80,18 @@ export function useGestureRecognitionLSTM(options = {}) {
       const data = await response.json();
       labelsRef.current = data.word_ids || [];
 
-      // console.log('✅ Modelo LSTM cargado:', labelsRef.current);
-      // console.log('✅ Input shape esperado:', model.inputs[0].shape);
-      // console.log('📊 Model info:');
-      // console.log('  - Inputs:', model.inputs.map(i => ({ name: i.name, shape: i.shape })));
-      // console.log('  - Outputs:', model.outputs.map(o => ({ name: o.name, shape: o.shape })));
+      try {
+        const statsResponse = await fetch('/models/normalization_stats.json');
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json();
+          normalizationStatsRef.current = stats;
+        } else {
+          normalizationStatsRef.current = null;
+        }
+      } catch (statsError) {
+        normalizationStatsRef.current = null;
+      }
+
       setIsModelLoading(false);
       setStatus('Modelo listo');
     } catch (err) {
@@ -98,8 +105,6 @@ export function useGestureRecognitionLSTM(options = {}) {
    * Procesa los resultados de MediaPipe y captura keypoints
    */
   const onResults = useCallback((results) => {
-
-    // Lógica de captura (igual a run_local_recognition.py)
     const isHandPresent = handDetected(results);
 
     if (isHandPresent || recordingRef.current) {
@@ -144,59 +149,76 @@ export function useGestureRecognitionLSTM(options = {}) {
     try {
       setStatus('🔍 Procesando...');
 
-      // Importar TensorFlow.js dinámicamente
       const tf = await import('@tensorflow/tfjs');
 
-      // Recortar frames del margen y delay
       let sequence = keypointsSequenceRef.current;
       const trimAmount = marginFrame + delayFrames;
       if (trimAmount > 0 && sequence.length > trimAmount) {
         sequence = sequence.slice(0, -trimAmount);
       }
 
-      // Normalizar a 15 frames
       const normalized = normalizeKeypoints(sequence, MODEL_CONFIG.FRAMES);
 
-      // Convertir a tensor [1, 15, 1662]
-      // GraphModel requiere que el input sea un tensor con la forma correcta
-      const sequenceData = normalized.map(frame => Array.from(frame));
-      // console.log('➡️ Input tensor data shape:', [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
-      const inputTensor = tf.tensor3d([sequenceData], [1, MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH]);
+      const sequenceData = normalized.map(frame => {
+        if (frame instanceof Float32Array) {
+          return Array.from(frame);
+        }
+        return Array.from(frame);
+      });
+      const sequenceTensor = tf.tensor2d(sequenceData, [MODEL_CONFIG.FRAMES, MODEL_CONFIG.KEYPOINTS_LENGTH], 'float32');
 
-      // Predicción con GraphModel usando execute()
-      // Para GraphModel con LSTM, usar execute() en lugar de executeAsync()
-      const prediction = modelRef.current.predict(inputTensor);
+      let normalizedSequenceTensor = sequenceTensor;
+      if (normalizationStatsRef.current) {
+        normalizedSequenceTensor = normalizeKeypointsSequence(
+          sequenceTensor,
+          normalizationStatsRef.current,
+          tf
+        );
+      }
+
+      if (normalizedSequenceTensor.shape[0] !== MODEL_CONFIG.FRAMES || 
+          normalizedSequenceTensor.shape[1] !== MODEL_CONFIG.KEYPOINTS_LENGTH) {
+        console.error('❌ ERROR: Tensor normalizado tiene forma incorrecta:', 
+          normalizedSequenceTensor.shape, 
+          'esperado: [', MODEL_CONFIG.FRAMES, ',', MODEL_CONFIG.KEYPOINTS_LENGTH, ']');
+      }
       
-      // Si execute devuelve un array, tomar el primer tensor
+      const inputTensor = normalizedSequenceTensor.expandDims(0);
+      
+      if (inputTensor.shape[0] !== 1 || 
+          inputTensor.shape[1] !== MODEL_CONFIG.FRAMES || 
+          inputTensor.shape[2] !== MODEL_CONFIG.KEYPOINTS_LENGTH) {
+        console.error('❌ ERROR: Tensor de entrada tiene forma incorrecta:', 
+          inputTensor.shape, 
+          'esperado: [1,', MODEL_CONFIG.FRAMES, ',', MODEL_CONFIG.KEYPOINTS_LENGTH, ']');
+      }
+
+      const prediction = modelRef.current.predict(inputTensor);
       const outputTensor = Array.isArray(prediction) ? prediction[0] : prediction;
       const probabilities = await outputTensor.data();
       
-      // Limpiar tensores
       inputTensor.dispose();
+      if (normalizedSequenceTensor !== sequenceTensor) {
+        normalizedSequenceTensor.dispose();
+      }
+      sequenceTensor.dispose();
       outputTensor.dispose();
       if (Array.isArray(prediction) && prediction.length > 1) {
         prediction.slice(1).forEach(t => t.dispose());
       }
 
-      // Obtener clase predicha
       const maxIdx = probabilities.indexOf(Math.max(...probabilities));
       const confidence = probabilities[maxIdx];
 
       if (confidence > threshold) {
         const label = labelsRef.current[maxIdx];
-        
-        // Remover SOLO sufijos de direccionalidad (-der, -izq, -gen)
-        // pero mantener guiones en nombres de gestos (ej: "lo-siento", "como-estas")
         const wordId = label.replace(/-(der|izq|gen)$/, '');
         
-        // Sistema de cooldown para evitar predicciones duplicadas
         const now = Date.now();
         const timeSinceLastPrediction = now - lastPredictionRef.current.timestamp;
         const isSameGesture = lastPredictionRef.current.wordId === wordId;
         
-        // Solo agregar si es un gesto diferente o si ha pasado el tiempo de cooldown
         if (!isSameGesture || timeSinceLastPrediction > PREDICTION_COOLDOWN) {
-          // Buscar en diccionario o formatear automáticamente
           const text = WORDS_TEXT[wordId] || 
             wordId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
@@ -208,22 +230,17 @@ export function useGestureRecognitionLSTM(options = {}) {
           };
 
           setCurrentPrediction(predictionResult);
-
-          // Actualizar frase
           setSentence(prev => {
             const newSentence = [text, ...prev];
             return newSentence.slice(0, maxSentenceLength);
           });
 
-          // Callback opcional
           if (onPrediction) {
             onPrediction(predictionResult);
           }
           
-          // Actualizar el timestamp de la última predicción
           lastPredictionRef.current = { wordId, timestamp: now };
         }
-
       }
     } catch (err) {
       console.error('Error en predicción:', err);
@@ -247,10 +264,6 @@ export function useGestureRecognitionLSTM(options = {}) {
    */
   const initializeHolistic = useCallback(async () => {
     try {
-      // setStatus('Inicializando MediaPipe Holistic...');
-      // console.log('🔧 Inicializando MediaPipe Holistic...');
-
-      // Importar MediaPipe dinámicamente (solo en cliente)
       const { Holistic } = await import('@mediapipe/holistic');
 
       const holistic = new Holistic({
@@ -291,35 +304,47 @@ export function useGestureRecognitionLSTM(options = {}) {
 
     try {
       setStatus('Solicitando permisos de cámara...');
-      // console.log('📷 Solicitando acceso a cámara...');
       const videoConstraints = getVideoConstraints();
 
-      // Usar getUserMedia nativo en lugar de @mediapipe/camera_utils
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
+        video: { 
+          ...videoConstraints,
+          frameRate: { ideal: 30, max: 30 }
+        },
         audio: false
       });
 
-
       const video = videoRef.current;
       video.srcObject = stream;
+      const lastFrameTimeRef = { current: 0 };
+      const TARGET_FPS = 30;
+      const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
+
       video.addEventListener('loadeddata', async () => {
         setIsWebcamReady(true);
         setStatus('✋ Listo para capturar');
 
-        // Procesar frames manualmente
         const processFrame = async () => {
-          if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
-            await holisticRef.current.send({ image: video });
+          const now = performance.now();
+          const elapsed = now - lastFrameTimeRef.current;
+          
+          if (elapsed >= FRAME_INTERVAL_MS) {
+            lastFrameTimeRef.current = now;
+            
+            if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
+              await holisticRef.current.send({ image: video });
+            }
           }
+          
           if (cameraRef.current) {
-            requestAnimationFrame(processFrame);
+            const nextDelay = Math.max(0, FRAME_INTERVAL_MS - (performance.now() - lastFrameTimeRef.current));
+            animationFrameIdRef.current = setTimeout(processFrame, nextDelay);
           }
         };
 
-        // Iniciar el loop de procesamiento
         cameraRef.current = { stream, stop: () => stream.getTracks().forEach(track => track.stop()) };
-        requestAnimationFrame(processFrame);
+        lastFrameTimeRef.current = performance.now();
+        animationFrameIdRef.current = setTimeout(processFrame, FRAME_INTERVAL_MS);
       });
 
       await video.play();
@@ -347,7 +372,6 @@ export function useGestureRecognitionLSTM(options = {}) {
    * Efecto de inicialización
    */
   useEffect(() => {
-    // Solo ejecutar en el cliente
     if (typeof window === 'undefined') return;
 
     const initialize = async () => {
@@ -357,8 +381,10 @@ export function useGestureRecognitionLSTM(options = {}) {
 
     initialize();
 
-    // Cleanup
     return () => {
+      if (animationFrameIdRef.current) {
+        clearTimeout(animationFrameIdRef.current);
+      }
       if (cameraRef.current) {
         cameraRef.current.stop();
       }
@@ -380,7 +406,7 @@ export function useGestureRecognitionLSTM(options = {}) {
   }, [isModelLoading, isHolisticReady, isVideoMounted, isWebcamReady, startCamera]);
 
   return {
-    videoRef: setVideoRef,  // Devuelve el callback ref
+    videoRef: setVideoRef,
     isModelLoading,
     isWebcamReady,
     currentPrediction,

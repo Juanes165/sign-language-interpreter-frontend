@@ -20,6 +20,7 @@ export function useContributeCapture(options = {}) {
   const canvasRef = useRef(null);
   const holisticRef = useRef(null);
   const cameraRef = useRef(null);
+  const animationFrameIdRef = useRef(null);
   const isInitializingRef = useRef(false); // Prevenir inicializaciones concurrentes
   const waitingForDecisionRef = useRef(false); // ⭐ Control de procesamiento
 
@@ -432,18 +433,35 @@ export function useContributeCapture(options = {}) {
       const video = videoRef.current;
       video.srcObject = stream;
 
+      // ⭐ Control estricto de FPS usando ref para mantener estado entre callbacks
+      const lastFrameTimeRef = { current: 0 };
+      const TARGET_FPS = 30;
+      const FRAME_INTERVAL_MS = 1000 / TARGET_FPS; // 33.33ms
+
       video.addEventListener('loadeddata', async () => {
         console.log('✅ Video cargado, iniciando procesamiento...');
         setIsWebcamReady(true);
         setStatus('✋ Listo para capturar');
 
         const processFrame = async () => {
-          // ⭐ NO PROCESAR si está esperando decisión del usuario
-          if (!waitingForDecisionRef.current && holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
-            await holisticRef.current.send({ image: video });
+          const now = performance.now();
+          const elapsed = now - lastFrameTimeRef.current;
+          
+          // Solo procesar si ha pasado suficiente tiempo desde el último frame (throttle a 30 FPS)
+          if (elapsed >= FRAME_INTERVAL_MS) {
+            lastFrameTimeRef.current = now;
+            
+            // ⭐ NO PROCESAR si está esperando decisión del usuario
+            if (!waitingForDecisionRef.current && holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
+              await holisticRef.current.send({ image: video });
+            }
           }
+          
+          // Programar siguiente frame
           if (cameraRef.current) {
-            requestAnimationFrame(processFrame);
+            // Calcular delay dinámico para mantener 30 FPS exactos
+            const nextDelay = Math.max(0, FRAME_INTERVAL_MS - (performance.now() - lastFrameTimeRef.current));
+            animationFrameIdRef.current = setTimeout(processFrame, nextDelay);
           }
         };
 
@@ -452,7 +470,9 @@ export function useContributeCapture(options = {}) {
           stop: () => stream.getTracks().forEach(track => track.stop())
         };
 
-        requestAnimationFrame(processFrame);
+        // Inicializar lastFrameTime y comenzar el loop
+        lastFrameTimeRef.current = performance.now();
+        animationFrameIdRef.current = setTimeout(processFrame, FRAME_INTERVAL_MS);
       }, { once: true }); // Asegurar que solo se ejecute una vez
 
       console.log('📷 Reproduciendo video...');
@@ -479,6 +499,10 @@ export function useContributeCapture(options = {}) {
    */
   const cleanup = useCallback(() => {
     console.log('🧹 Ejecutando limpieza completa...');
+    
+    if (animationFrameIdRef.current) {
+      clearTimeout(animationFrameIdRef.current);
+    }
     
     if (cameraRef.current) {
       console.log('🛑 Deteniendo cámara...');
