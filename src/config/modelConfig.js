@@ -7,7 +7,7 @@
 
 export const MODEL_CONFIG = {
   // Frames del modelo LSTM
-  MODEL_FRAMES: 45,  // Actualizado desde 15 → 45 (mediana de datos reales)
+  MODEL_FRAMES: 15,  // Coincide con el modelo entrenado (train_lstm_node_v5.js y convert_frontend_samples_to_npy.py)
   
   // Keypoints por frame (MediaPipe Holistic)
   LENGTH_KEYPOINTS: 1662,
@@ -18,9 +18,9 @@ export const MODEL_CONFIG = {
   FRAME_DELAY: 3,           // Frames de delay para detener captura
   
   // Recomendaciones de captura
-  RECOMMENDED_MIN_FRAMES: 15,   // Mínimo recomendado para buena calidad
-  OPTIMAL_FRAMES: 25,           // Óptimo (coincide con MODEL_FRAMES)
-  EXCELLENT_FRAMES: 45,         // Excelente calidad
+  RECOMMENDED_MIN_FRAMES: 10,   // Mínimo recomendado para buena calidad
+  OPTIMAL_FRAMES: 15,           // Óptimo (coincide con MODEL_FRAMES)
+  EXCELLENT_FRAMES: 20,         // Excelente calidad
 };
 
 /**
@@ -32,7 +32,7 @@ export function evaluateQuality(totalFrames) {
       level: 'excellent',
       label: '¡Excelente calidad!',
       color: 'green',
-      message: 'Esta muestra tiene frames suficientes para entrenar perfectamente el modelo.'
+      message: 'Esta muestra tiene más frames que el óptimo, será entrenada con muestreo uniforme.'
     };
   }
   
@@ -45,10 +45,19 @@ export function evaluateQuality(totalFrames) {
     };
   }
   
-  if (totalFrames >= MODEL_CONFIG.RECOMMENDED_MIN_FRAMES) {
+  if (totalFrames >= 8) {
     return {
       level: 'good',
       label: 'Buena calidad',
+      color: 'blue',
+      message: 'Esta muestra es válida y contribuirá bien al entrenamiento.'
+    };
+  }
+  
+  if (totalFrames >= MODEL_CONFIG.RECOMMENDED_MIN_FRAMES) {
+    return {
+      level: 'acceptable',
+      label: 'Calidad aceptable',
       color: 'blue',
       message: 'Esta muestra es válida y contribuirá bien al entrenamiento.'
     };

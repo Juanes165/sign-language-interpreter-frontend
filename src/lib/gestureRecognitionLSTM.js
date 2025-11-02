@@ -45,6 +45,7 @@ export function handDetected(results) {
 
 /**
  * Interpola keypoints para ajustar la longitud de la secuencia
+ * Replica normalize_keypoints de run_local_recognition.py
  * @param {Array} keypoints - Array de frames con keypoints
  * @param {number} targetLength - Longitud objetivo (default: 15)
  * @returns {Array}
@@ -53,53 +54,52 @@ export function interpolateKeypoints(keypoints, targetLength = 15) {
   const cur = keypoints.length;
   if (cur === targetLength) return keypoints;
 
+  // Si es más corta, interpolar con linspace (como el backend de Python)
+  if (cur < targetLength) {
+    const indices = [];
+    for (let i = 0; i < targetLength; i++) {
+      indices.push((i * (cur - 1)) / (targetLength - 1));
+    }
+    
+    const out = [];
+    for (const idx of indices) {
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      const w = idx - lo;
+      
+      if (lo === hi || hi >= cur) {
+        out.push(keypoints[lo]);
+      } else {
+        // Interpolación lineal
+        const interpolated = new Float32Array(keypoints[lo].length);
+        for (let j = 0; j < keypoints[lo].length; j++) {
+          interpolated[j] = (1 - w) * keypoints[lo][j] + w * keypoints[hi][j];
+        }
+        out.push(interpolated);
+      }
+    }
+    return out;
+  }
+
+  // Si es más larga, hacer muestreo step-wise (como normalize_keypoints del backend)
+  const step = cur / targetLength;
   const indices = [];
   for (let i = 0; i < targetLength; i++) {
-    indices.push((i * (cur - 1)) / (targetLength - 1));
+    indices.push(Math.floor(i * step));
   }
-
-  const out = [];
-  for (const idx of indices) {
-    const lo = Math.floor(idx);
-    const hi = Math.ceil(idx);
-    const w = idx - lo;
-
-    if (lo === hi) {
-      out.push(keypoints[lo]);
-    } else {
-      const interpolated = new Float32Array(keypoints[lo].length);
-      for (let j = 0; j < keypoints[lo].length; j++) {
-        interpolated[j] = (1 - w) * keypoints[lo][j] + w * keypoints[hi][j];
-      }
-      out.push(interpolated);
-    }
-  }
-  return out;
+  
+  return indices.map(i => keypoints[i]);
 }
 
 /**
  * Normaliza la secuencia de keypoints al largo objetivo
+ * Replica normalize_keypoints de run_local_recognition.py
  * @param {Array} keypoints - Array de frames
  * @param {number} targetLength - Longitud objetivo
  * @returns {Array}
  */
 export function normalizeKeypoints(keypoints, targetLength = 15) {
-  const cur = keypoints.length;
-
-  if (cur < targetLength) {
-    return interpolateKeypoints(keypoints, targetLength);
-  }
-
-  if (cur > targetLength) {
-    const step = cur / targetLength;
-    const indices = [];
-    for (let i = 0; i < targetLength; i++) {
-      indices.push(Math.floor(i * step));
-    }
-    return indices.map(i => keypoints[i]);
-  }
-
-  return keypoints;
+  return interpolateKeypoints(keypoints, targetLength);
 }
 
 /**

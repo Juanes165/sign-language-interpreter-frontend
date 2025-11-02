@@ -22,7 +22,7 @@
           "config": {
             "name": "lstm_LSTM1",
             "trainable": true,
-            "units": 128,
+            "units": 256,
             "activation": "tanh",
             "recurrent_activation": "hard_sigmoid",
             "use_bias": true,
@@ -51,7 +51,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.01
+                "l2": 0.001
               }
             },
             "recurrent_regularizer": null,
@@ -117,7 +117,7 @@
           "config": {
             "name": "lstm_LSTM2",
             "trainable": true,
-            "units": 64,
+            "units": 128,
             "activation": "tanh",
             "recurrent_activation": "hard_sigmoid",
             "use_bias": true,
@@ -146,7 +146,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.01
+                "l2": 0.001
               }
             },
             "recurrent_regularizer": null,
@@ -230,7 +230,7 @@
               "class_name": "L1L2",
               "config": {
                 "l1": 0,
-                "l2": 0.01
+                "l2": 0.001
               }
             },
             "bias_regularizer": null,
@@ -294,80 +294,80 @@
           "name": "lstm_LSTM1/kernel",
           "shape": [
             1662,
-            512
+            1024
           ],
           "dtype": "float32"
         },
         {
           "name": "lstm_LSTM1/recurrent_kernel",
           "shape": [
-            128,
-            512
+            256,
+            1024
           ],
           "dtype": "float32"
         },
         {
           "name": "lstm_LSTM1/bias",
           "shape": [
-            512
+            1024
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization1/gamma",
           "shape": [
-            128
+            256
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization1/beta",
           "shape": [
-            128
+            256
           ],
           "dtype": "float32"
         },
         {
           "name": "lstm_LSTM2/kernel",
           "shape": [
-            128,
-            256
+            256,
+            512
           ],
           "dtype": "float32"
         },
         {
           "name": "lstm_LSTM2/recurrent_kernel",
           "shape": [
-            64,
-            256
+            128,
+            512
           ],
           "dtype": "float32"
         },
         {
           "name": "lstm_LSTM2/bias",
           "shape": [
-            256
+            512
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization2/gamma",
           "shape": [
-            64
+            128
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization2/beta",
           "shape": [
-            64
+            128
           ],
           "dtype": "float32"
         },
         {
           "name": "dense_Dense1/kernel",
           "shape": [
-            64,
+            128,
             32
           ],
           "dtype": "float32"
@@ -397,28 +397,28 @@
         {
           "name": "batch_normalization_BatchNormalization1/moving_mean",
           "shape": [
-            128
+            256
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization1/moving_variance",
           "shape": [
-            128
+            256
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization2/moving_mean",
           "shape": [
-            64
+            128
           ],
           "dtype": "float32"
         },
         {
           "name": "batch_normalization_BatchNormalization2/moving_variance",
           "shape": [
-            64
+            128
           ],
           "dtype": "float32"
         }
