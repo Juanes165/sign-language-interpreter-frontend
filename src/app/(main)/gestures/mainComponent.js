@@ -18,7 +18,7 @@ export default function GesturesMainComponent() {
     error,
     clearSentence,
   } = useGestureRecognitionLSTM({
-    threshold: 0,
+    threshold: 0.1, // 70% de confianza mínimo
     marginFrame: 1,
     delayFrames: 3,
     maxSentenceLength: 10,
