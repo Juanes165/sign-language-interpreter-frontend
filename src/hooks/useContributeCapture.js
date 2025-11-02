@@ -20,6 +20,7 @@ export function useContributeCapture(options = {}) {
   const canvasRef = useRef(null);
   const holisticRef = useRef(null);
   const cameraRef = useRef(null);
+  const animationFrameIdRef = useRef(null);
   const isInitializingRef = useRef(false); // Prevenir inicializaciones concurrentes
   const waitingForDecisionRef = useRef(false); // ⭐ Control de procesamiento
 
@@ -437,13 +438,14 @@ export function useContributeCapture(options = {}) {
         setIsWebcamReady(true);
         setStatus('✋ Listo para capturar');
 
+        // Procesar frames a 30 FPS (33.33ms por frame)
         const processFrame = async () => {
           // ⭐ NO PROCESAR si está esperando decisión del usuario
           if (!waitingForDecisionRef.current && holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
             await holisticRef.current.send({ image: video });
           }
           if (cameraRef.current) {
-            requestAnimationFrame(processFrame);
+            animationFrameIdRef.current = setTimeout(processFrame, 33.33); // 30 FPS
           }
         };
 
@@ -452,7 +454,7 @@ export function useContributeCapture(options = {}) {
           stop: () => stream.getTracks().forEach(track => track.stop())
         };
 
-        requestAnimationFrame(processFrame);
+        animationFrameIdRef.current = setTimeout(processFrame, 33.33);
       }, { once: true }); // Asegurar que solo se ejecute una vez
 
       console.log('📷 Reproduciendo video...');
@@ -479,6 +481,10 @@ export function useContributeCapture(options = {}) {
    */
   const cleanup = useCallback(() => {
     console.log('🧹 Ejecutando limpieza completa...');
+    
+    if (animationFrameIdRef.current) {
+      clearTimeout(animationFrameIdRef.current);
+    }
     
     if (cameraRef.current) {
       console.log('🛑 Deteniendo cámara...');

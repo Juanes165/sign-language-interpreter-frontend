@@ -27,6 +27,7 @@ export function useGestureRecognitionLSTM(options = {}) {
   const videoRef = useRef(null);
   const holisticRef = useRef(null);
   const cameraRef = useRef(null);
+  const animationFrameIdRef = useRef(null);
   const modelRef = useRef(null);
   const labelsRef = useRef([]);
 
@@ -310,19 +311,19 @@ export function useGestureRecognitionLSTM(options = {}) {
         setIsWebcamReady(true);
         setStatus('✋ Listo para capturar');
 
-        // Procesar frames manualmente
+        // Procesar frames a 30 FPS (33.33ms por frame)
         const processFrame = async () => {
           if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
             await holisticRef.current.send({ image: video });
           }
           if (cameraRef.current) {
-            requestAnimationFrame(processFrame);
+            animationFrameIdRef.current = setTimeout(processFrame, 33.33); // 30 FPS
           }
         };
 
-        // Iniciar el loop de procesamiento
+        // Iniciar el loop de procesamiento a 30 FPS
         cameraRef.current = { stream, stop: () => stream.getTracks().forEach(track => track.stop()) };
-        requestAnimationFrame(processFrame);
+        animationFrameIdRef.current = setTimeout(processFrame, 33.33);
       });
 
       await video.play();
@@ -362,6 +363,9 @@ export function useGestureRecognitionLSTM(options = {}) {
 
     // Cleanup
     return () => {
+      if (animationFrameIdRef.current) {
+        clearTimeout(animationFrameIdRef.current);
+      }
       if (cameraRef.current) {
         cameraRef.current.stop();
       }
