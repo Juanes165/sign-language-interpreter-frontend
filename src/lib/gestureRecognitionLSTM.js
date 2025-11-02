@@ -4,6 +4,49 @@
  */
 
 /**
+ * Normaliza las coordenadas de una mano centrando respecto a la muñeca y normalizando la escala
+ * @param {Array} landmarks - Array de landmarks de MediaPipe
+ * @returns {Array} Landmarks normalizados
+ */
+function normalizeHandGeometry(landmarks) {
+  if (!landmarks || landmarks.length === 0) return landmarks;
+  
+  // La muñeca es el landmark índice 0
+  const wrist = landmarks[0];
+  
+  // Calcular la distancia promedio desde la muñeca a los otros puntos para normalizar escala
+  let meanDistance = 0;
+  let validPoints = 0;
+  
+  for (let i = 1; i < landmarks.length; i++) {
+    const dx = landmarks[i].x - wrist.x;
+    const dy = landmarks[i].y - wrist.y;
+    const dz = landmarks[i].z - wrist.z;
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    
+    if (distance > 0) {
+      meanDistance += distance;
+      validPoints++;
+    }
+  }
+  
+  // Usar la distancia promedio como factor de escala
+  const scale = validPoints > 0 ? meanDistance / validPoints : 1;
+  
+  // Evitar división por cero o escala muy pequeña
+  const normalizedScale = Math.max(scale, 0.001);
+  
+  // Normalizar cada landmark: centrar en muñeca y dividir por escala
+  return landmarks.map(lm => {
+    const normalizedX = (lm.x - wrist.x) / normalizedScale;
+    const normalizedY = (lm.y - wrist.y) / normalizedScale;
+    const normalizedZ = (lm.z - wrist.z) / normalizedScale;
+    
+    return { x: normalizedX, y: normalizedY, z: normalizedZ };
+  });
+}
+
+/**
  * Extrae los keypoints de los resultados de MediaPipe Holistic
  * Replica la función extract_keypoints de Python
  * @param {Object} results - Resultados de MediaPipe Holistic
@@ -18,13 +61,22 @@ export function extractKeypoints(results) {
     ? results.faceLandmarks.flatMap(lm => [lm.x, lm.y, lm.z])
     : new Array(468 * 3).fill(0);
 
-  const leftHand = results.leftHandLandmarks
-    ? results.leftHandLandmarks.flatMap(lm => [lm.x, lm.y, lm.z])
-    : new Array(21 * 3).fill(0);
+  // Aplicar normalización geométrica a las manos para hacerlas invariantes a distancia
+  let leftHand;
+  if (results.leftHandLandmarks && results.leftHandLandmarks.length > 0) {
+    const normalizedLeft = normalizeHandGeometry(results.leftHandLandmarks);
+    leftHand = normalizedLeft.flatMap(lm => [lm.x, lm.y, lm.z]);
+  } else {
+    leftHand = new Array(21 * 3).fill(0);
+  }
 
-  const rightHand = results.rightHandLandmarks
-    ? results.rightHandLandmarks.flatMap(lm => [lm.x, lm.y, lm.z])
-    : new Array(21 * 3).fill(0);
+  let rightHand;
+  if (results.rightHandLandmarks && results.rightHandLandmarks.length > 0) {
+    const normalizedRight = normalizeHandGeometry(results.rightHandLandmarks);
+    rightHand = normalizedRight.flatMap(lm => [lm.x, lm.y, lm.z]);
+  } else {
+    rightHand = new Array(21 * 3).fill(0);
+  }
 
   return new Float32Array([...pose, ...face, ...leftHand, ...rightHand]);
 }
