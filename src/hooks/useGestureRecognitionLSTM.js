@@ -307,23 +307,40 @@ export function useGestureRecognitionLSTM(options = {}) {
 
       const video = videoRef.current;
       video.srcObject = stream;
+      // ⭐ Control estricto de FPS usando ref para mantener estado entre callbacks
+      const lastFrameTimeRef = { current: 0 };
+      const TARGET_FPS = 30;
+      const FRAME_INTERVAL_MS = 1000 / TARGET_FPS; // 33.33ms
+
       video.addEventListener('loadeddata', async () => {
         setIsWebcamReady(true);
         setStatus('✋ Listo para capturar');
 
-        // Procesar frames a 30 FPS (33.33ms por frame)
         const processFrame = async () => {
-          if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
-            await holisticRef.current.send({ image: video });
+          const now = performance.now();
+          const elapsed = now - lastFrameTimeRef.current;
+          
+          // Solo procesar si ha pasado suficiente tiempo desde el último frame (throttle a 30 FPS)
+          if (elapsed >= FRAME_INTERVAL_MS) {
+            lastFrameTimeRef.current = now;
+            
+            if (holisticRef.current && video.readyState === video.HAVE_ENOUGH_DATA) {
+              await holisticRef.current.send({ image: video });
+            }
           }
+          
+          // Programar siguiente frame
           if (cameraRef.current) {
-            animationFrameIdRef.current = setTimeout(processFrame, 33.33); // 30 FPS
+            // Calcular delay dinámico para mantener 30 FPS exactos
+            const nextDelay = Math.max(0, FRAME_INTERVAL_MS - (performance.now() - lastFrameTimeRef.current));
+            animationFrameIdRef.current = setTimeout(processFrame, nextDelay);
           }
         };
 
         // Iniciar el loop de procesamiento a 30 FPS
         cameraRef.current = { stream, stop: () => stream.getTracks().forEach(track => track.stop()) };
-        animationFrameIdRef.current = setTimeout(processFrame, 33.33);
+        lastFrameTimeRef.current = performance.now();
+        animationFrameIdRef.current = setTimeout(processFrame, FRAME_INTERVAL_MS);
       });
 
       await video.play();
