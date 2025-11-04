@@ -251,7 +251,7 @@ export default function GesturesMainComponent() {
   );
 }
 
-function InformationPopUp({ information, setShow }) {
+export function InformationPopUp({ information, setShow }) {
 
   const {
     title,
