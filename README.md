@@ -52,14 +52,14 @@ ls public/models/
 ### **Reconocimiento de Gestos** (`/gestures`)
 - 🎥 Reconocimiento en tiempo real
 - 🧠 Modelo LSTM con TensorFlow.js
-- 📊 18 gestos disponibles
+- 📊 14 gestos disponibles
 - 💯 Indicador de confianza
 
 ### **Contribución Colaborativa** (`/contribute`)
 - 🤝 Captura de nuevos gestos
 - 📈 Estadísticas de usuario
 - ☁️ Sincronización automática con Google Drive
-- 🎯 18 gestos objetivo
+- 🎯 14 gestos objetivo
 
 ### **Abecedario** (`/alphabet`)
 - 📚 Señas estáticas (A-Z)

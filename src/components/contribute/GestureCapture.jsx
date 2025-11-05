@@ -97,8 +97,8 @@ export default function GestureCapture({ gesture, onBack }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Inicializando...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amethyst dark:border-grape mx-auto mb-4"></div>
+          <p className="text-amethyst dark:text-grape text-lg">Inicializando...</p>
         </div>
       </div>
     );
@@ -110,46 +110,46 @@ export default function GestureCapture({ gesture, onBack }) {
       <div className="mb-6">
         <button
           onClick={onBack}
-          className="mb-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          className="mb-4 px-4 py-2 bg-amethyst dark:bg-grape hover:bg-wisteria dark:hover:bg-amethyst text-main-light rounded-lg transition-colors"
         >
           ← Volver
         </button>
         
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-2xl md:text-3xl font-semibold text-amethyst dark:text-grape mb-2">
           Capturando: {gesture?.label || 'Gesto'}
         </h1>
         
-        <p className="text-gray-400">
+        <p className="text-platinum dark:text-platinum/70">
           Realiza el gesto cuando estés listo. La captura comenzará automáticamente al detectar tus manos.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-1">Estado</div>
-          <div className="text-lg font-semibold">{status}</div>
+        <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 rounded-lg p-4">
+          <div className="text-sm text-platinum dark:text-platinum/70 mb-1">Estado</div>
+          <div className="text-lg font-semibold text-amethyst dark:text-grape">{status}</div>
         </div>
         
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-1">Frames Capturados</div>
-          <div className="text-lg font-semibold">
+        <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 rounded-lg p-4">
+          <div className="text-sm text-platinum dark:text-platinum/70 mb-1">Frames Capturados</div>
+          <div className="text-lg font-semibold text-amethyst dark:text-grape">
             {isCapturing ? (
-              <span className="text-red-500 animate-pulse">{capturedFrames}</span>
+              <span className="text-wisteria dark:text-amethyst animate-pulse">{capturedFrames}</span>
             ) : (
-              capturedFrames
+              <span className="text-amethyst dark:text-grape">{capturedFrames}</span>
             )}
           </div>
         </div>
         
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-1">Muestras Guardadas</div>
-          <div className="text-lg font-semibold text-green-500">{totalSamples}</div>
+        <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 rounded-lg p-4">
+          <div className="text-sm text-platinum dark:text-platinum/70 mb-1">Muestras Guardadas</div>
+          <div className="text-lg font-semibold text-wisteria dark:text-amethyst">{totalSamples}</div>
         </div>
       </div>
 
       {/* Camera View */}
-      <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-6 rounded-3xl md:rounded-4xl">
+      <div className="relative bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 rounded-lg overflow-hidden aspect-video mb-6 rounded-3xl md:rounded-4xl">
         {/* Video oculto (solo para MediaPipe) */}
         <video
           ref={videoRef}
@@ -169,16 +169,16 @@ export default function GestureCapture({ gesture, onBack }) {
         
         {/* Overlay de estado */}
         {(!isHolisticReady || !isWebcamReady) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="absolute inset-0 flex items-center justify-center bg-main-dark/70 dark:bg-main-dark/70 backdrop-blur-sm">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-              <p className="text-white text-lg">{status}</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amethyst dark:border-grape mx-auto mb-4"></div>
+              <p className="text-platinum dark:text-platinum/70 text-lg">{status}</p>
             </div>
           </div>
         )}
         
         {isCapturing && (
-          <div className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-full font-semibold animate-pulse">
+          <div className="absolute top-4 left-4 bg-wisteria dark:bg-amethyst text-main-light px-4 py-2 rounded-full font-semibold animate-pulse">
             ● GRABANDO
           </div>
         )}
@@ -186,16 +186,16 @@ export default function GestureCapture({ gesture, onBack }) {
 
       {/* Error Help Section */}
       {error && (
-        <div className="mb-6 bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-red-400 mb-4">⚠️ Problema Detectado</h3>
+        <div className="mb-6 bg-wisteria/20 dark:bg-amethyst/20 border border-wisteria dark:border-amethyst rounded-lg p-6">
+          <h3 className="text-xl font-semibold text-amethyst dark:text-grape mb-4">⚠️ Problema Detectado</h3>
           
-          <p className="text-red-200 mb-4 text-lg font-semibold">{error}</p>
+          <p className="text-platinum dark:text-platinum/70 mb-4 text-lg font-semibold">{error}</p>
           
-          <div className="space-y-3 text-red-100">
-            <p className="font-semibold">Soluciones comunes:</p>
+          <div className="space-y-3 text-platinum dark:text-platinum/70">
+            <p className="font-semibold text-amethyst dark:text-grape">Soluciones comunes:</p>
             
-            <div className="bg-red-950 bg-opacity-50 p-4 rounded">
-              <p className="font-semibold mb-2">🔴 Si dice "Cámara en uso":</p>
+            <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 p-4 rounded">
+              <p className="font-semibold mb-2 text-amethyst dark:text-grape">🔴 Si dice "Cámara en uso":</p>
               <ul className="list-disc list-inside space-y-1 ml-4 text-sm">
                 <li>Cierra otras aplicaciones que usen la cámara (Zoom, Teams, Skype, etc.)</li>
                 <li>Cierra otras pestañas del navegador que usen la cámara</li>
@@ -203,8 +203,8 @@ export default function GestureCapture({ gesture, onBack }) {
               </ul>
             </div>
             
-            <div className="bg-red-950 bg-opacity-50 p-4 rounded">
-              <p className="font-semibold mb-2">🔒 Si dice "Permiso denegado":</p>
+            <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 p-4 rounded">
+              <p className="font-semibold mb-2 text-amethyst dark:text-grape">🔒 Si dice "Permiso denegado":</p>
               <ul className="list-disc list-inside space-y-1 ml-4 text-sm">
                 <li>Haz click en el ícono de candado/cámara en la barra de direcciones</li>
                 <li>Selecciona "Permitir" para el acceso a la cámara</li>
@@ -212,8 +212,8 @@ export default function GestureCapture({ gesture, onBack }) {
               </ul>
             </div>
             
-            <div className="bg-red-950 bg-opacity-50 p-4 rounded">
-              <p className="font-semibold mb-2">📷 Si dice "No se encontró cámara":</p>
+            <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 p-4 rounded">
+              <p className="font-semibold mb-2 text-amethyst dark:text-grape">📷 Si dice "No se encontró cámara":</p>
               <ul className="list-disc list-inside space-y-1 ml-4 text-sm">
                 <li>Verifica que tu cámara esté conectada correctamente</li>
                 <li>Verifica que los drivers de la cámara estén instalados</li>
@@ -242,7 +242,7 @@ export default function GestureCapture({ gesture, onBack }) {
                 console.error('Error al reintentar:', err);
               }
             }}
-            className="mt-4 w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+            className="mt-4 w-full px-6 py-3 bg-amethyst dark:bg-grape hover:bg-wisteria dark:hover:bg-amethyst text-main-light font-semibold rounded-lg transition-colors"
           >
             🔄 Reintentar
           </button>
@@ -250,49 +250,49 @@ export default function GestureCapture({ gesture, onBack }) {
       )}
 
       {/* Instructions */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4">📝 Instrucciones</h3>
+      <div className="bg-main-dark dark:bg-main-light/5 border border-platinum dark:border-platinum/20 rounded-lg p-6">
+        <h3 className="text-xl font-semibold mb-4 text-amethyst dark:text-grape">📝 Instrucciones</h3>
         
-        <div className="space-y-3 text-gray-300">
+        <div className="space-y-3 text-platinum dark:text-platinum/70">
           <div className="flex items-start gap-3">
             <span className="text-2xl">1️⃣</span>
             <p>
-              <strong>Posiciónate:</strong> Colócate frente a la cámara, asegúrate de que tus manos sean visibles.
+              <strong className="text-amethyst dark:text-grape">Posiciónate:</strong> Colócate frente a la cámara, asegúrate de que tus manos sean visibles.
             </p>
           </div>
           
           <div className="flex items-start gap-3">
             <span className="text-2xl">2️⃣</span>
             <p>
-              <strong>Espera:</strong> La captura comenzará automáticamente cuando detecte tus manos.
+              <strong className="text-amethyst dark:text-grape">Espera:</strong> La captura comenzará automáticamente cuando detecte tus manos.
             </p>
           </div>
           
           <div className="flex items-start gap-3">
             <span className="text-2xl">3️⃣</span>
             <p>
-              <strong>Realiza el gesto:</strong> Ejecuta la seña <strong>&quot;{gesture?.label}&quot;</strong> de forma natural.
+              <strong className="text-amethyst dark:text-grape">Realiza el gesto:</strong> Ejecuta la seña <strong className="text-wisteria dark:text-amethyst">&quot;{gesture?.label}&quot;</strong> de forma natural.
             </p>
           </div>
           
           <div className="flex items-start gap-3">
             <span className="text-2xl">4️⃣</span>
             <p>
-              <strong>Finaliza:</strong> Retira tus manos del cuadro para detener la grabación.
+              <strong className="text-amethyst dark:text-grape">Finaliza:</strong> Retira tus manos del cuadro para detener la grabación.
             </p>
           </div>
           
           <div className="flex items-start gap-3">
             <span className="text-2xl">5️⃣</span>
             <p>
-              <strong>Repite:</strong> Puedes capturar múltiples muestras del mismo gesto para mejorar el entrenamiento.
+              <strong className="text-amethyst dark:text-grape">Repite:</strong> Puedes capturar múltiples muestras del mismo gesto para mejorar el entrenamiento.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg">
-          <p className="text-sm text-blue-200">
-            <strong>💡 Consejo:</strong> Captura al menos 3-5 muestras del mismo gesto desde diferentes ángulos
+        <div className="mt-6 p-4 bg-wisteria/20 dark:bg-amethyst/20 border border-wisteria dark:border-amethyst rounded-lg">
+          <p className="text-sm text-main-light">
+            <strong className="text-amethyst dark:text-grape">💡 Consejo:</strong> Captura al menos 3-5 muestras del mismo gesto desde diferentes ángulos
             y con distintas velocidades para que el modelo aprenda mejor.
           </p>
         </div>

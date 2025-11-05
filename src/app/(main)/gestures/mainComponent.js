@@ -295,23 +295,19 @@ const supportedSignsInfo = {
   description: "✅  La seña es detectada de forma consistente",
   description2: "⚠️  La seña es detectada de forma inconsistente",
   listOfItems: [
-    { itemTitle: "Buenos días", itemIcon: "✅" },
+    { itemTitle: "Mal", itemIcon: "⚠️" },
+    { itemTitle: "Hola", itemIcon: "⚠️" },
+    { itemTitle: "Lo siento", itemIcon: "✅" },
+    { itemTitle: "Sordo", itemIcon: "⚠️" },
+    { itemTitle: "Más o menos", itemIcon: "✅" },
+    { itemTitle: "Bien", itemIcon: "⚠️" },
     { itemTitle: "Buenas tardes", itemIcon: "✅" },
+    { itemTitle: "Adiós", itemIcon: "✅" },
+    { itemTitle: "Feliz cumpleaños", itemIcon: "✅" },
+    { itemTitle: "Gracias", itemIcon: "⚠️" },
     { itemTitle: "Buenas noches", itemIcon: "✅" },
     { itemTitle: "Cómo estás", itemIcon: "✅" },
-    { itemTitle: "Por favor", itemIcon: "✅" },
-    { itemTitle: "Gracias", itemIcon: "⚠️" },
-    { itemTitle: "Perdón", itemIcon: "✅" },
-    { itemTitle: "Con gusto", itemIcon: "✅" },
-    { itemTitle: "Hola", itemIcon: "⚠️" },
-    { itemTitle: "Adiós", itemIcon: "✅" },
-    { itemTitle: "Bien", itemIcon: "⚠️" },
-    { itemTitle: "Mal", itemIcon: "⚠️" },
-    { itemTitle: "Más o menos", itemIcon: "✅" },
-    { itemTitle: "Sordo", itemIcon: "⚠️" },
-    { itemTitle: "Bienvenido", itemIcon: "⚠️" },
     { itemTitle: "Permiso", itemIcon: "✅" },
-    { itemTitle: "Lo siento", itemIcon: "✅" },
-    { itemTitle: "Feliz cumpleaños", itemIcon: "✅" }
+    { itemTitle: "Buenos días", itemIcon: "✅" }
   ]
 }
