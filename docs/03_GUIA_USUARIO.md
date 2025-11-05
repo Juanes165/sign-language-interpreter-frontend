@@ -45,26 +45,22 @@ Aprende a usar el sistema de reconocimiento de gestos y a contribuir con nuevas 
 
 | Emoji | Gesto | Descripción |
 |-------|-------|-------------|
-| 👂 | Sordo | Persona sorda |
-| 👋 | Hola | Saludo básico |
-| 🤔 | ¿Cómo estás? | Pregunta de cortesía |
-| 👍 | Bien | Respuesta positiva |
 | 👎 | Mal | Respuesta negativa |
-| 🤷 | Más o menos | Respuesta neutral |
-| ☀️ | Buenos días | Saludo matutino |
-| 🌤️ | Buenas tardes | Saludo vespertino |
-| 🌙 | Buenas noches | Saludo nocturno |
-| 👋 | Adiós | Despedida |
-| 🙏 | Por favor | Solicitud cortés |
-| 😊 | Con gusto | Aceptación amable |
-| 🤗 | Bienvenido | Recibimiento |
-| 🙏 | Gracias | Agradecimiento |
-| 🙇 | Perdón | Disculpa |
-| 🚶 | Permiso | Solicitud de paso |
+| 👋 | Hola | Saludo básico |
 | 😔 | Lo siento | Disculpa formal |
+| 👂 | Sordo | Persona sorda |
+| 🤷 | Más o menos | Respuesta neutral |
+| 👍 | Bien | Respuesta positiva |
+| 🌤️ | Buenas tardes | Saludo vespertino |
+| 👋 | Adiós | Despedida |
 | 🎂 | Feliz cumpleaños | Celebración |
+| 🙏 | Gracias | Agradecimiento |
+| 🌙 | Buenas noches | Saludo nocturno |
+| 🤔 | ¿Cómo estás? | Pregunta de cortesía |
+| 🚶 | Permiso | Solicitud de paso |
+| ☀️ | Buenos días | Saludo matutino |
 
-**Total: 18 gestos**
+**Total: 14 gestos**
 
 ---
 
@@ -116,15 +112,15 @@ Tus contribuciones ayudan a:
 🎉 ¡Gran trabajo!
 Has contribuido con 23 muestras en 4 gestos diferentes
 
-Objetivo: Capturar los 18 gestos
-Progreso: 4 / 18 (22%)
+Objetivo: Capturar los 14 gestos
+Progreso: 4 / 14 (29%)
 ```
 
 ---
 
 #### **Paso 3: Seleccionar Gesto**
 
-1. Ver la lista de 18 gestos disponibles
+1. Ver la lista de 14 gestos disponibles
 2. Hacer clic en el gesto que quieras capturar
 3. Ver instrucciones del gesto (si disponibles)
 
@@ -214,7 +210,7 @@ Progreso: 4 / 18 (22%)
 - Ideal: 15+ muestras
 
 #### **4. Variedad**
-- Contribuir a todos los 18 gestos
+- Contribuir a todos los 14 gestos
 - Diferentes momentos del día
 - Diferentes condiciones de luz
 
@@ -391,8 +387,8 @@ Si ves estos mensajes, todo funcionó correctamente.
 ### **Tu Progreso**
 
 ```
-Objetivo: Capturar los 18 gestos
-Progreso: X / 18 (XX%)
+Objetivo: Capturar los 14 gestos
+Progreso: X / 14 (XX%)
 
 Total de muestras: XX
 Gestos únicos: X
@@ -402,10 +398,10 @@ Gestos únicos: X
 
 | Gestos capturados | Acción recomendada |
 |-------------------|--------------------|
-| 0-5 | 🚀 ¡Empieza a contribuir! |
-| 6-12 | 👍 Buen progreso, sigue así |
-| 13-17 | 🎯 Casi completo, un poco más |
-| 18 | 🎉 ¡Objetivo cumplido! Puedes agregar más muestras |
+| 0-4 | 🚀 ¡Empieza a contribuir! |
+| 5-9 | 👍 Buen progreso, sigue así |
+| 10-13 | 🎯 Casi completo, un poco más |
+| 14 | 🎉 ¡Objetivo cumplido! Puedes agregar más muestras |
 
 ---
 
