@@ -3,8 +3,8 @@ import {
   extractKeypoints,
   handDetected,
   MODEL_CONFIG,
-  WORDS_TEXT,
 } from '@/lib/gestureRecognitionLSTM';
+import { displayText } from '@/lib/vocabulary';
 import { preprocessSequence, resampleSequence } from '@/lib/preprocess';
 import {
   decidePrediction,
@@ -66,6 +66,7 @@ export function useGestureRecognitionLSTM(options = {}) {
   const [error, setError] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [modelConfig, setModelConfig] = useState(null);
 
   const setVideoRef = useCallback((node) => {
     videoRef.current = node;
@@ -116,6 +117,7 @@ export function useGestureRecognitionLSTM(options = {}) {
       }
       modelRef.current = model;
       configRef.current = config;
+      setModelConfig(config);
       setIsModelLoading(false);
       setStatus('Modelo listo');
     } catch (err) {
@@ -139,7 +141,10 @@ export function useGestureRecognitionLSTM(options = {}) {
       const trim = marginFrame + delayFrames;
       const sequence = capturedSequence.length > trim ? capturedSequence.slice(0, -trim) : capturedSequence;
 
-      const features = preprocessSequence(resampleSequence(sequence, config.frames));
+      // El modelo manda: use_face=false (modelos con LSC-54) deja la cara fuera. Sin el campo, como el v7.
+      const features = preprocessSequence(resampleSequence(sequence, config.frames), {
+        useFace: config.preprocess?.use_face !== false,
+      });
       const flat = new Float32Array(config.frames * config.features);
       features.forEach((frame, i) => flat.set(frame, i * config.features));
 
@@ -165,8 +170,7 @@ export function useGestureRecognitionLSTM(options = {}) {
       if (isDuplicate(lastPredictionRef.current, wordId, now, MODEL_CONFIG.COOLDOWN_MS)) return;
       lastPredictionRef.current = { wordId, timestamp: now };
 
-      const text = WORDS_TEXT[wordId]
-        ?? wordId.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      const text = displayText(config, wordId);
       const result = { label: wordId, wordId, text, confidence: decision.confidence };
 
       clearTimeout(rejectionTimerRef.current);
@@ -367,5 +371,6 @@ export function useGestureRecognitionLSTM(options = {}) {
     isMuted,
     toggleMute,
     speechSupported,
+    modelConfig,
   };
 }

@@ -11,7 +11,8 @@ Sistema web de reconocimiento de gestos en lengua de señas con contribución co
 1. **[Arquitectura del Sistema](docs/01_ARQUITECTURA_SISTEMA.md)** - Visión técnica completa ⚙️
 2. **[Guía de Configuración](docs/02_GUIA_CONFIGURACION.md)** - Setup y configuración 🔧
 3. **[Guía de Usuario](docs/03_GUIA_USUARIO.md)** - Cómo usar y contribuir 👤
-4. **[Modelo v7](docs/04_MODELO_V7.md)** - Preprocesamiento, métricas y umbrales (**vigente**: donde difiera de 01–03, manda este)
+4. **[Modelo v7](docs/04_MODELO_V7.md)** - Historial del modelo anterior (18 señas, solo datos propios)
+5. **[Modelo v8 con LSC-54](docs/05_MODELO_V8_LSC54.md)** - **Vigente**: 57 señas, métricas con personas nuevas, umbral y límites (donde difiera de 01–04, manda este)
 
 ---
 
@@ -39,7 +40,7 @@ Abrir: [http://localhost:3000](http://localhost:3000)
 
 ```bash
 # Desde el repo de entrenamiento (Tesis/gesto_releasev1), tras correr src/train_v7.py
-cp ../Tesis/gesto_releasev1/models/v7/{model.json,weights.bin,words.json,model_config.json} public/models/
+cp ../Tesis/gesto_releasev1/models/v8/{model.json,weights.bin,words.json,model_config.json} public/models/
 
 # Verificar archivos
 ls public/models/
@@ -55,7 +56,7 @@ ls public/models/
 ### **Reconocimiento de Gestos** (`/gestures`)
 - 🎥 Reconocimiento en tiempo real
 - 🧠 Modelo LSTM con TensorFlow.js (v7, landmarks relativos al cuerpo)
-- 📊 18 señas disponibles
+- 📊 57 señas disponibles (saludos, cortesía, colores, números y más; la lista sale de `model_config.json`)
 - 💯 Indicador de confianza, con rechazo de señas dudosas o ambiguas
 - 🔊 Lectura en voz alta de la frase (voz del navegador, sin servicios externos)
 - 📝 Frase en orden de lectura, con botón de copiar
@@ -64,7 +65,7 @@ ls public/models/
 - 🤝 Captura de nuevos gestos
 - 📈 Estadísticas de usuario
 - ☁️ Sincronización automática con Google Drive
-- 🎯 18 gestos objetivo
+- 🎯 Todas las señas del modelo, más la opción "No es una seña" para ayudar al rechazo
 
 ### **Abecedario** (`/alphabet`)
 - 📚 Señas estáticas (A-Z)
@@ -80,7 +81,8 @@ sign-language-interpreter-frontend/
 │   ├── 01_ARQUITECTURA_SISTEMA.md
 │   ├── 02_GUIA_CONFIGURACION.md
 │   ├── 03_GUIA_USUARIO.md
-│   └── 04_MODELO_V7.md
+│   ├── 04_MODELO_V7.md
+│   └── 05_MODELO_V8_LSC54.md
 │
 ├── src/
 │   ├── app/
@@ -171,7 +173,8 @@ npm test         # Tests (Vitest)
 | [Arquitectura](docs/01_ARQUITECTURA_SISTEMA.md) | Visión técnica del sistema |
 | [Configuración](docs/02_GUIA_CONFIGURACION.md) | Setup completo |
 | [Usuario](docs/03_GUIA_USUARIO.md) | Cómo usar el sistema |
-| [Modelo v7](docs/04_MODELO_V7.md) | Preprocesamiento, métricas y umbrales |
+| [Modelo v7](docs/04_MODELO_V7.md) | Historial del modelo anterior |
+| [Modelo v8 con LSC-54](docs/05_MODELO_V8_LSC54.md) | Modelo vigente: métricas, umbral y límites |
 
 ---
 

@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { uploadToDrive, saveToBackend } from '@/lib/saveToBackend';
 import { getVideoConstraints } from '@/lib';
+import { getContributorId } from '@/lib/contributor';
 
 /**
  * Hook para capturar gestos en la página de contribución
@@ -113,6 +114,7 @@ export function useContributeCapture(options = {}) {
       id: `sample_${timestamp}`, // ID único para identificar la muestra
       gesture: gesture.id,
       gestureName: gesture.label,
+      contributorId: getContributorId(), // id aleatorio anónimo: permite evaluar con personas nuevas
       timestamp,
       totalFrames: keypoints.length,
       keypoints, // Array de arrays [1662 valores cada uno]

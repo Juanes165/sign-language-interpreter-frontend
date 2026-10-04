@@ -93,9 +93,25 @@ Si cambias el preprocesamiento, cámbialo en `preprocess.py` **y** en `preproces
 `tests/fixtures/preprocess_parity.json` con `tests/make_parity_fixture.py` y comprueba que los
 dos lados pasen. Cambiar solo uno rompe el reconocimiento sin dar errores.
 
+## Vocabulario único y contribuciones
+
+- **Una sola fuente de verdad:** el texto a mostrar/leer y la categoría de cada seña viven en
+  `Tesis/gesto_releasev1/models/vocabulary.json`. El entrenamiento los copia a
+  `public/models/model_config.json` (`vocabulary` y `categories`) y el front los lee de ahí: voz,
+  popup de señas (agrupado por categoría y con buscador) y página de contribuir. No hay listas
+  duplicadas a mano. Para agregar una seña: añadirla en `vocabulary.json`, reentrenar (o regenerar la
+  config con `python src/export_tfjs.py models/v7`) y copiar `model_config.json` aquí.
+- **`contributorId`:** cada muestra grabada en la página de contribuir incluye un identificador
+  aleatorio guardado solo en el navegador (sin datos personales). Permite entrenar y evaluar
+  separando a las personas, que es la medida que importa para saber si el modelo funciona con
+  alguien nuevo.
+- **"No es una seña":** la página de contribuir permite grabar movimientos reales sin seña (clase
+  `sin-sena`). Son los mejores negativos para que el modelo rechace en vez de inventar una palabra;
+  sustituyen a los sintéticos del entrenamiento actual.
+
 ## Cómo mejorarlo más
 
-1. Recolectar más capturas por seña y de más personas, con identificador de señante.
-2. Recolectar negativos reales para `sin-sena`.
+1. Recolectar más capturas por seña y de más personas (ya se guarda un identificador por persona).
+2. Recolectar negativos reales para `sin-sena` (ya hay una opción en la página de contribuir).
 3. Bajar de Drive los JSON originales (frames sin remuestrear): permitirían usar más de 15 frames.
 4. Sumar señas de datasets públicos de LSC (p. ej. LSC54, con landmarks de MediaPipe).
