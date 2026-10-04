@@ -48,12 +48,14 @@ function poseXYZ(raw, idx) {
  * @param {{center:number[], scale:number}|null} anchor Ultimos hombros validos
  * @returns {{features: Float32Array, anchor: {center:number[], scale:number}|null}}
  */
-export function preprocessFrame(raw, anchor = null) {
+export function preprocessFrame(raw, anchor = null, useFace = true) {
   const out = new Float32Array(N_FEATURES);
 
   const hasLh = anyNonZero(raw, LH_OFFSET, LH_OFFSET + 63);
   const hasRh = anyNonZero(raw, RH_OFFSET, RH_OFFSET + 63);
-  const hasFace = anyNonZero(raw, FACE_OFFSET, FACE_OFFSET + FACE_POINTS * 3);
+  // useFace=false deja el bloque de cara [159:192] en cero (los modelos entrenados con LSC-54, cuyos
+  // videos tienen la cara pixelada, no usan la cara; ver gesto_releasev1/src/preprocess.py).
+  const hasFace = useFace && anyNonZero(raw, FACE_OFFSET, FACE_OFFSET + FACE_POINTS * 3);
   const ls = poseXYZ(raw, L_SHOULDER);
   const rs = poseXYZ(raw, R_SHOULDER);
   let hasPose = ls.some((v) => v !== 0) && rs.some((v) => v !== 0);
@@ -112,11 +114,14 @@ export function preprocessFrame(raw, anchor = null) {
   return { features: out, anchor };
 }
 
-/** (T x 1662) -> (T x 195). Los hombros ausentes usan los ultimos validos de la secuencia. */
-export function preprocessSequence(rawFrames) {
+/**
+ * (T x 1662) -> (T x 195). Los hombros ausentes usan los ultimos validos de la secuencia.
+ * @param {{useFace?: boolean}} options useFace viene de model_config.json (preprocess.use_face); por defecto true.
+ */
+export function preprocessSequence(rawFrames, { useFace = true } = {}) {
   let anchor = null;
   return rawFrames.map((raw) => {
-    const res = preprocessFrame(raw, anchor);
+    const res = preprocessFrame(raw, anchor, useFace);
     anchor = res.anchor;
     return res.features;
   });

@@ -141,7 +141,10 @@ export function useGestureRecognitionLSTM(options = {}) {
       const trim = marginFrame + delayFrames;
       const sequence = capturedSequence.length > trim ? capturedSequence.slice(0, -trim) : capturedSequence;
 
-      const features = preprocessSequence(resampleSequence(sequence, config.frames));
+      // El modelo manda: use_face=false (modelos con LSC-54) deja la cara fuera. Sin el campo, como el v7.
+      const features = preprocessSequence(resampleSequence(sequence, config.frames), {
+        useFace: config.preprocess?.use_face !== false,
+      });
       const flat = new Float32Array(config.frames * config.features);
       features.forEach((frame, i) => flat.set(frame, i * config.features));
 
