@@ -1,5 +1,12 @@
 {
-  "word_ids": [
+  "frames": 15,
+  "features": 195,
+  "threshold": 0.85,
+  "margin": 0.15,
+  "temperature_baked_in": 1.2499999999999998,
+  "negative_class": "sin-sena",
+  "version": "v7",
+  "classes": [
     "adios",
     "bien",
     "bienvenido",
@@ -17,6 +24,7 @@
     "perdon",
     "permiso",
     "por-favor",
-    "sordo"
+    "sordo",
+    "sin-sena"
   ]
 }

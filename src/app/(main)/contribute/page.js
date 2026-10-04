@@ -19,7 +19,7 @@ const GestureCapture = dynamic(
   }
 );
 
-// Lista de gestos disponibles para contribuir (LISTA FIJA) - 14 gestos
+// Lista de gestos disponibles para contribuir (LISTA FIJA) - 18 gestos
 const AVAILABLE_GESTURES = [
   { id: 'mal', label: 'Mal', description: 'Respuesta negativa', emoji: '👎' },
   { id: 'hola', label: 'Hola', description: 'Saludo básico', emoji: '👋' },
@@ -35,6 +35,10 @@ const AVAILABLE_GESTURES = [
   { id: 'como-estas', label: '¿Cómo estás?', description: 'Pregunta de cortesía', emoji: '🤔' },
   { id: 'permiso', label: 'Permiso', description: 'Solicitud de paso', emoji: '🚶' },
   { id: 'buenos-dias', label: 'Buenos días', description: 'Saludo matutino', emoji: '☀️' },
+  { id: 'bienvenido', label: 'Bienvenido', description: 'Dar la bienvenida', emoji: '🤗' },
+  { id: 'perdon', label: 'Perdón', description: 'Pedir disculpas', emoji: '🙇' },
+  { id: 'por-favor', label: 'Por favor', description: 'Solicitud cortés', emoji: '🥺' },
+  { id: 'con-gusto', label: 'Con gusto', description: 'Respuesta amable', emoji: '😊' },
 ];
 
 export default function ContributePage() {

@@ -1,52 +1,39 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useGestureRecognitionLSTM } from '@/hooks/useGestureRecognitionLSTM';
+import { WORDS_TEXT } from '@/lib/gestureRecognitionLSTM';
+import { sentenceToText } from '@/lib/recognition';
 import { CameraIcon, DeleteIcon } from '@/utils/icons';
 
 export default function GesturesMainComponent() {
-  const [availableGestures, setAvailableGestures] = useState([]);
-  const [isLoadingGestures, setIsLoadingGestures] = useState(true);
   const [showInfoPopUp, setShowInfoPopUp] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const {
     videoRef,
     isModelLoading,
     isWebcamReady,
     currentPrediction,
+    rejection,
     sentence,
     status,
     error,
     clearSentence,
-  } = useGestureRecognitionLSTM({
-    threshold: 0.1, // 70% de confianza mínimo
-    marginFrame: 1,
-    delayFrames: 3,
-    maxSentenceLength: 10,
-    onPrediction: (prediction) => {
-      console.log('Nueva predicción:', prediction);
+    speakSentence,
+    isMuted,
+    toggleMute,
+    speechSupported,
+  } = useGestureRecognitionLSTM({ maxSentenceLength: 12 });
+
+  const copySentence = async () => {
+    try {
+      await navigator.clipboard.writeText(sentenceToText(sentence));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
     }
-  });
-
-  // Cargar gestos dinámicamente desde el modelo
-  useEffect(() => {
-    async function loadGestures() {
-      try {
-        const response = await fetch('/models/words.json');
-        const data = await response.json();
-        setAvailableGestures(data.word_ids || ['hola', 'bien', 'adios', 'como-estas']);
-
-        console.log('✅ Gestos cargados:', data.word_ids);
-      } catch (error) {
-        console.error('Error cargando gestos:', error);
-        // Fallback a gestos por defecto
-        setAvailableGestures(['hola', 'bien', 'adios', 'como-estas']);
-      } finally {
-        setIsLoadingGestures(false);
-      }
-    }
-
-    loadGestures();
-  }, []);
+  };
 
   return (
     <div className='pb-4 lg:pb-8 relative'>
@@ -60,18 +47,18 @@ export default function GesturesMainComponent() {
         <section className="w-full aspect-[3/4] md:aspect-[4/3] xl:aspect-[16/9] xl:w-[740px] 2xl:w-[970px] relative bg-main-dark dark:bg-main-light/5 rounded-3xl md:rounded-4xl shadow-md/50 dark:shadow-sm dark:shadow-main-light">
 
           {/* Loading State */}
-          {(isModelLoading || !isWebcamReady) && (
+          {(isModelLoading || !isWebcamReady) && !error && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-platinum flex flex-col items-center">
               <CameraIcon className="text-platinum w-40 h-40" />
               <span className="text-3xl text-center font-semibold mt-4">
-                {isModelLoading ? 'Cargando modelo LSTM...' : 'Iniciando cámara...'}
+                {isModelLoading ? 'Cargando modelo...' : 'Iniciando cámara...'}
               </span>
             </div>
           )}
 
           {/* Error State */}
           {error && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500 flex flex-col items-center z-20">
+            <div role="alert" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5/6 text-red-500 flex flex-col items-center z-20">
               <span className="text-2xl text-center font-semibold">⚠️ {error}</span>
             </div>
           )}
@@ -82,13 +69,15 @@ export default function GesturesMainComponent() {
             className={`${!isWebcamReady ? 'hidden' : 'block'} scale-x-[-1] absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover rounded-3xl md:rounded-4xl`}
             autoPlay
             playsInline
+            muted
+            aria-label="Vista de tu cámara"
           />
 
           {/* OVERLAY FOR STATUS */}
-          {isWebcamReady && (
+          {isWebcamReady && !error && (
             <div className="absolute top-0 left-0 h-10 m-4 z-2">
               <div className="w-full h-full bg-main-light/70 dark:bg-main-dark/35 backdrop-blur-sm rounded-2xl md:rounded-3xl flex px-6 py-0 items-center justify-center">
-                <span className="text-green-400 text-lg font-medium">
+                <span role="status" aria-live="polite" className="text-green-400 text-lg font-medium">
                   {status}
                 </span>
               </div>
@@ -102,7 +91,7 @@ export default function GesturesMainComponent() {
         <section className="flex flex-col w-full pt-4 lg:max-w-80 2xl:max-w-96 justify-center items-center self-center">
 
           {/* CURRENT PREDICTION */}
-          <div className="rounded-3xl w-full">
+          <div className="rounded-3xl w-full" aria-live="polite">
 
             {currentPrediction ? (
               <>
@@ -152,37 +141,67 @@ export default function GesturesMainComponent() {
                 <span className='text-center'>Realiza un gesto para ver la predicción</span>
               </div>
             )}
+
+            {rejection && (
+              <p role="status" className="mt-3 text-center text-sm bg-yellow-200/20 text-yellow-600 dark:text-yellow-400 px-3 py-2 rounded-lg">
+                {rejection.message}
+              </p>
+            )}
           </div>
 
           {/* Frase acumulada */}
-          <div className="mt-8 h-50 py-2 px-4 w-full border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10">
-            <div className="flex justify-between items-center">
+          <div className="mt-8 py-2 px-4 w-full border-2 border-platinum border-dashed rounded-lg dotted bg-platinum/25 dark:bg-platinum/10">
+            <div className="flex justify-between items-center gap-2">
               <h3 className="text-amethyst text-xl font-bold">
-                Historial
+                Frase
               </h3>
               {sentence.length > 0 && (
                 <button
+                  type="button"
                   onClick={clearSentence}
-                  className="text-main-dark/25 dark:text-main-light/35"
+                  aria-label="Borrar la frase"
+                  title="Borrar la frase"
+                  className="text-main-dark/40 dark:text-main-light/50 cursor-pointer"
                 >
                   <DeleteIcon className="w-8 h-8" />
                 </button>
               )}
             </div>
-            <div className="space-y-0 mb-2 overflow-y-auto h-34">
-              {sentence.length > 0 ? (
-                sentence.map((word, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-opacity-20 px-6 py-1 rounded-lg text-lg font-medium"
-                  >
-                    {word}
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-400 text-center">
-                  Las palabras aparecerán aquí
-                </p>
+
+            <p aria-live="polite" className="min-h-24 max-h-40 overflow-y-auto py-2 text-lg font-medium">
+              {sentence.length > 0
+                ? sentenceToText(sentence)
+                : <span className="text-gray-400">Las palabras aparecerán aquí, en orden de lectura</span>}
+            </p>
+
+            <div className="flex flex-wrap gap-2 pb-2">
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={speakSentence}
+                  disabled={sentence.length === 0}
+                  className="px-3 py-1 rounded-lg text-sm text-main-light bg-amethyst dark:bg-grape disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Leer en voz alta
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={copySentence}
+                disabled={sentence.length === 0}
+                className="px-3 py-1 rounded-lg text-sm border border-amethyst dark:border-grape disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                {copied ? 'Copiado' : 'Copiar'}
+              </button>
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  aria-pressed={isMuted}
+                  className="px-3 py-1 rounded-lg text-sm border border-platinum cursor-pointer"
+                >
+                  {isMuted ? 'Activar voz automática' : 'Silenciar voz automática'}
+                </button>
               )}
             </div>
           </div>
@@ -240,7 +259,7 @@ export default function GesturesMainComponent() {
 
       <div className='w-full flex items-center justify-center'>
         <span className='text-center text-balance'>
-          <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos un total de {supportedSignsInfo.listOfItems.length} señas oficiales de la LSC. Para ver las señas disponibles haz click <span onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</span>
+          <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos {supportedSignsInfo.listOfItems.length} señas de la LSC. Para verlas haz click <button type="button" onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</button>
         </span>
       </div>
 
@@ -256,7 +275,6 @@ function InformationPopUp({ information, setShow }) {
   const {
     title,
     description,
-    description2,
     listOfItems
   } = information;
 
@@ -266,20 +284,18 @@ function InformationPopUp({ information, setShow }) {
       <div className="fixed inset-0 flex items-center justify-center z-20">
 
         <div className="relative p-8 mx-8 w-100 lg:w-150 rounded-4xl bg-main-light dark:bg-main-dark border border-amethyst dark:border-grape z-15">
-          <button type="button" onClick={() => setShow(false)} className="absolute top-0 right-0 h-6 w-6 mt-7 mr-7 flex items-center justify-center cursor-pointer">
+          <button type="button" aria-label="Cerrar" onClick={() => setShow(false)} className="absolute top-0 right-0 h-6 w-6 mt-7 mr-7 flex items-center justify-center cursor-pointer">
             <span className="absolute w-6 h-0.5 rounded-full rotate-45 bg-main-dark/35" />
             <span className="absolute w-6 h-0.5 rounded-full -rotate-45 bg-main-dark/35" />
           </button>
 
           <h1 className="text-center text-2xl">{title}</h1>
           <p className="text-xs text-center xs:text-sm lg:text-lg mt-4 mb-2">{description}</p>
-          <p className="text-xs text-center xs:text-sm lg:text-lg mt-4 mb-2">{description2}</p>
 
           <div className='grid grid-cols-2 lg:grid-cols-3 pt-4'>
             {listOfItems.map((item, index) => (
               <div key={index} className='flex justify-end items-center not-first:py-2 space-x-2'>
                 <span className='text-xs lg:text-base'>{item.itemTitle}</span>
-                <span>{item.itemIcon}</span>
               </div>
             ))}
           </div>
@@ -292,22 +308,6 @@ function InformationPopUp({ information, setShow }) {
 
 const supportedSignsInfo = {
   title: "Señas soportadas",
-  description: "✅  La seña es detectada de forma consistente",
-  description2: "⚠️  La seña es detectada de forma inconsistente",
-  listOfItems: [
-    { itemTitle: "Mal", itemIcon: "⚠️" },
-    { itemTitle: "Hola", itemIcon: "⚠️" },
-    { itemTitle: "Lo siento", itemIcon: "✅" },
-    { itemTitle: "Sordo", itemIcon: "⚠️" },
-    { itemTitle: "Más o menos", itemIcon: "✅" },
-    { itemTitle: "Bien", itemIcon: "⚠️" },
-    { itemTitle: "Buenas tardes", itemIcon: "✅" },
-    { itemTitle: "Adiós", itemIcon: "✅" },
-    { itemTitle: "Feliz cumpleaños", itemIcon: "✅" },
-    { itemTitle: "Gracias", itemIcon: "⚠️" },
-    { itemTitle: "Buenas noches", itemIcon: "✅" },
-    { itemTitle: "Cómo estás", itemIcon: "✅" },
-    { itemTitle: "Permiso", itemIcon: "✅" },
-    { itemTitle: "Buenos días", itemIcon: "✅" }
-  ]
-}
+  description: "Estas son las señas que la app reconoce. Si una no se detecta, repítela con calma, con buena luz y con las manos dentro de la imagen.",
+  listOfItems: Object.values(WORDS_TEXT).map((text) => ({ itemTitle: text.replace(/[¿?]/g, '') })),
+};

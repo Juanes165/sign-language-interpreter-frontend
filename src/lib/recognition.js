@@ -3,14 +3,6 @@
  * para poder probarla sin camara.
  */
 
-/** Promedia las probabilidades de varias pasadas (p. ej. distintos offsets de remuestreo). */
-export function averageProbabilities(list) {
-  const n = list[0].length;
-  const out = new Float32Array(n);
-  for (const p of list) for (let i = 0; i < n; i++) out[i] += p[i] / list.length;
-  return out;
-}
-
 /**
  * Decide si aceptar una prediccion.
  * Rechaza si: la clase ganadora es 'sin-sena', la confianza es menor al umbral, o la

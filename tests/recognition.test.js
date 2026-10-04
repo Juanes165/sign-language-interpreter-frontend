@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  averageProbabilities,
   decidePrediction,
   isDuplicate,
   sentenceToText,
@@ -37,11 +36,6 @@ describe('decidePrediction', () => {
 });
 
 describe('utilidades', () => {
-  it('promedia probabilidades', () => {
-    const out = averageProbabilities([Float32Array.from([1, 0]), Float32Array.from([0, 1])]);
-    expect(Array.from(out)).toEqual([0.5, 0.5]);
-  });
-
   it('detecta duplicados dentro del cooldown', () => {
     const last = { wordId: 'hola', timestamp: 1000 };
     expect(isDuplicate(last, 'hola', 2000, 1500)).toBe(true);
