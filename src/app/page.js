@@ -119,8 +119,8 @@ const alphabetTutorialData = {
 
 const signsTutorialData = {
   title: "Señas",
-  description: `Este módulo reconoce e interpreta 18 señas completas de la LSC, 
-  permitiéndote comunicar palabras y expresiones de forma natural. Podrás practicar 
+  description: `Este módulo reconoce e interpreta señas completas de la LSC (saludos, cortesía, colores,
+  números y más), permitiéndote comunicar palabras y expresiones de forma natural. Podrás practicar
   la formación de frases y mejorar tu fluidez al expresarte con señas. 
   `
 }

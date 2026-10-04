@@ -1,36 +1,98 @@
 {
   "frames": 15,
   "features": 195,
-  "threshold": 0.85,
+  "threshold": 0.7,
   "margin": 0.15,
-  "temperature_baked_in": 1.2499999999999998,
+  "temperature_baked_in": 1.1999999999999997,
   "negative_class": "sin-sena",
-  "version": "v7",
+  "version": "v8",
+  "preprocess": {
+    "use_face": false
+  },
   "classes": [
     "adios",
+    "amarillo",
+    "apoyar",
+    "ayudar",
+    "azul",
+    "bano",
     "bien",
     "bienvenido",
+    "blanco",
     "buenas-noches",
     "buenas-tardes",
     "buenos-dias",
+    "cafe",
+    "chao",
+    "cinco",
     "como-estas",
     "con-gusto",
+    "cuatro",
+    "de-nada",
+    "diez",
+    "dos",
+    "esperar",
+    "excelente",
     "feliz-cumpleanos",
     "gracias",
+    "gris",
     "hola",
+    "invitar",
     "lo-siento",
     "mal",
     "mas-o-menos",
+    "morado",
+    "muchas-gracias",
+    "muy-bien",
+    "muy-mal",
+    "naranja",
+    "necesitar",
+    "negro",
+    "no",
+    "nueve",
+    "ocho",
     "perdon",
+    "perfecto",
     "permiso",
     "por-favor",
+    "presentar",
+    "rojo",
+    "rosado",
+    "seis",
+    "sentarse",
+    "si",
+    "siete",
     "sordo",
+    "tranquilo",
+    "tres",
+    "uno",
+    "verde",
     "sin-sena"
   ],
   "vocabulary": {
     "adios": {
       "display": "Adiós",
       "category": "saludos"
+    },
+    "amarillo": {
+      "display": "Amarillo",
+      "category": "colores"
+    },
+    "apoyar": {
+      "display": "Apoyar",
+      "category": "cortesia"
+    },
+    "ayudar": {
+      "display": "Ayudar",
+      "category": "cortesia"
+    },
+    "azul": {
+      "display": "Azul",
+      "category": "colores"
+    },
+    "bano": {
+      "display": "Baño",
+      "category": "cortesia"
     },
     "bien": {
       "display": "Bien",
@@ -39,6 +101,10 @@
     "bienvenido": {
       "display": "Bienvenido",
       "category": "saludos"
+    },
+    "blanco": {
+      "display": "Blanco",
+      "category": "colores"
     },
     "buenas-noches": {
       "display": "Buenas noches",
@@ -52,12 +118,48 @@
       "display": "Buenos días",
       "category": "saludos"
     },
+    "cafe": {
+      "display": "Café",
+      "category": "colores"
+    },
+    "chao": {
+      "display": "Chao",
+      "category": "cortesia"
+    },
+    "cinco": {
+      "display": "Cinco",
+      "category": "numeros"
+    },
     "como-estas": {
       "display": "¿Cómo estás?",
       "category": "saludos"
     },
     "con-gusto": {
       "display": "Con gusto",
+      "category": "cortesia"
+    },
+    "cuatro": {
+      "display": "Cuatro",
+      "category": "numeros"
+    },
+    "de-nada": {
+      "display": "De nada",
+      "category": "cortesia"
+    },
+    "diez": {
+      "display": "Diez",
+      "category": "numeros"
+    },
+    "dos": {
+      "display": "Dos",
+      "category": "numeros"
+    },
+    "esperar": {
+      "display": "Esperar",
+      "category": "cortesia"
+    },
+    "excelente": {
+      "display": "Excelente",
       "category": "cortesia"
     },
     "feliz-cumpleanos": {
@@ -68,9 +170,17 @@
       "display": "Gracias",
       "category": "cortesia"
     },
+    "gris": {
+      "display": "Gris",
+      "category": "colores"
+    },
     "hola": {
       "display": "Hola",
       "category": "saludos"
+    },
+    "invitar": {
+      "display": "Invitar",
+      "category": "cortesia"
     },
     "lo-siento": {
       "display": "Lo siento",
@@ -84,8 +194,52 @@
       "display": "Más o menos",
       "category": "respuestas"
     },
+    "morado": {
+      "display": "Morado",
+      "category": "colores"
+    },
+    "muchas-gracias": {
+      "display": "Muchas gracias",
+      "category": "cortesia"
+    },
+    "muy-bien": {
+      "display": "Muy bien",
+      "category": "cortesia"
+    },
+    "muy-mal": {
+      "display": "Muy mal",
+      "category": "cortesia"
+    },
+    "naranja": {
+      "display": "Naranja",
+      "category": "colores"
+    },
+    "necesitar": {
+      "display": "Necesitar",
+      "category": "cortesia"
+    },
+    "negro": {
+      "display": "Negro",
+      "category": "colores"
+    },
+    "no": {
+      "display": "No",
+      "category": "cortesia"
+    },
+    "nueve": {
+      "display": "Nueve",
+      "category": "numeros"
+    },
+    "ocho": {
+      "display": "Ocho",
+      "category": "numeros"
+    },
     "perdon": {
       "display": "Perdón",
+      "category": "cortesia"
+    },
+    "perfecto": {
+      "display": "Perfecto",
       "category": "cortesia"
     },
     "permiso": {
@@ -96,15 +250,61 @@
       "display": "Por favor",
       "category": "cortesia"
     },
+    "presentar": {
+      "display": "Presentar",
+      "category": "cortesia"
+    },
+    "rojo": {
+      "display": "Rojo",
+      "category": "colores"
+    },
+    "rosado": {
+      "display": "Rosado",
+      "category": "colores"
+    },
+    "seis": {
+      "display": "Seis",
+      "category": "numeros"
+    },
+    "sentarse": {
+      "display": "Sentarse",
+      "category": "cortesia"
+    },
+    "si": {
+      "display": "Sí",
+      "category": "cortesia"
+    },
+    "siete": {
+      "display": "Siete",
+      "category": "numeros"
+    },
     "sordo": {
       "display": "Sordo",
       "category": "otros"
+    },
+    "tranquilo": {
+      "display": "Tranquilo",
+      "category": "cortesia"
+    },
+    "tres": {
+      "display": "Tres",
+      "category": "numeros"
+    },
+    "uno": {
+      "display": "Uno",
+      "category": "numeros"
+    },
+    "verde": {
+      "display": "Verde",
+      "category": "colores"
     }
   },
   "categories": {
     "saludos": "Saludos y despedidas",
     "cortesia": "Cortesía",
     "respuestas": "Respuestas y estados",
-    "otros": "Otras"
+    "otros": "Otras",
+    "colores": "Colores",
+    "numeros": "Números"
   }
 }
