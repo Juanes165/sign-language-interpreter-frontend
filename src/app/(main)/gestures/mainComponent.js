@@ -42,6 +42,18 @@ export default function GesturesMainComponent() {
         {"> Reconocimiento de señas <"}
       </h1>
 
+      {modelConfig && (
+        <div className="flex justify-center -mt-1 mb-4 px-6">
+          <button
+            type="button"
+            onClick={() => setShowInfoPopUp(true)}
+            className="px-5 py-2 rounded-full border border-amethyst dark:border-grape text-amethyst dark:text-wisteria font-medium hover:bg-wisteria/20 dark:hover:bg-amethyst/20 transition-colors cursor-pointer"
+          >
+            Ver las {vocabularySize(modelConfig)} señas que reconoce
+          </button>
+        </div>
+      )}
+
       <div className="px-12 md:px-20 flex flex-col lg:flex-row space-x-10 justify-between pb-8">
 
         {/* CÁMARA Y VIDEO */}
