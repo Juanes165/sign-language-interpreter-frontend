@@ -106,28 +106,3 @@ export const MODEL_CONFIG = {
   DELAY_FRAMES: 3,
   COOLDOWN_MS: 1500,
 };
-
-/**
- * Mapeo de palabras a texto hablado (español)
- * Convierte los IDs de gestos (con guiones) a texto legible
- */
-export const WORDS_TEXT = {
-  "hola": "Hola",
-  "adios": "Adiós",
-  "bien": "Bien",
-  "mal": "Mal",
-  "gracias": "Gracias",
-  "perdon": "Perdón",
-  "lo-siento": "Lo siento",
-  "por-favor": "Por favor",
-  "con-gusto": "Con gusto",
-  "buenos-dias": "Buenos días",
-  "buenas-tardes": "Buenas tardes",
-  "buenas-noches": "Buenas noches",
-  "bienvenido": "Bienvenido",
-  "como-estas": "¿Cómo estás?",
-  "mas-o-menos": "Más o menos",
-  "sordo": "Sordo",
-  "permiso": "Permiso",
-  "feliz-cumpleanos": "Feliz cumpleaños",
-};

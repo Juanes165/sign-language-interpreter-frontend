@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useGestureRecognitionLSTM } from '@/hooks/useGestureRecognitionLSTM';
-import { WORDS_TEXT } from '@/lib/gestureRecognitionLSTM';
 import { sentenceToText } from '@/lib/recognition';
+import { groupByCategory, vocabularySize } from '@/lib/vocabulary';
 import { CameraIcon, DeleteIcon } from '@/utils/icons';
 
 export default function GesturesMainComponent() {
@@ -23,6 +23,7 @@ export default function GesturesMainComponent() {
     isMuted,
     toggleMute,
     speechSupported,
+    modelConfig,
   } = useGestureRecognitionLSTM({ maxSentenceLength: 12 });
 
   const copySentence = async () => {
@@ -257,57 +258,80 @@ export default function GesturesMainComponent() {
         </section>
       </div>
 
-      <div className='w-full flex items-center justify-center'>
-        <span className='text-center text-balance'>
-          <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos {supportedSignsInfo.listOfItems.length} señas de la LSC. Para verlas haz click <button type="button" onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</button>
-        </span>
-      </div>
+      {modelConfig && (
+        <div className='w-full flex items-center justify-center'>
+          <span className='text-center text-balance'>
+            <span className='font-semibold bg-main'>⚠️ Nota:</span> Actualmente soportamos {vocabularySize(modelConfig)} señas de la LSC. Para verlas haz click <button type="button" onClick={() => setShowInfoPopUp(true)} className='text-grape dark:text-wisteria font-semibold underline cursor-pointer'>aquí</button>
+          </span>
+        </div>
+      )}
 
-      {showInfoPopUp &&
-        <InformationPopUp information={supportedSignsInfo} setShow={setShowInfoPopUp} />
+      {showInfoPopUp && modelConfig &&
+        <InformationPopUp groups={groupByCategory(modelConfig)} setShow={setShowInfoPopUp} />
       }
     </div>
   );
 }
 
-function InformationPopUp({ information, setShow }) {
+const TITLE_ID = 'signs-dialog-title';
 
-  const {
-    title,
-    description,
-    listOfItems
-  } = information;
+/** Quita tildes y pasa a minusculas para que "cómo" encuentre "como". */
+const normalize = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function InformationPopUp({ groups, setShow }) {
+  const [query, setQuery] = useState('');
+  const q = normalize(query.trim());
+
+  const visible = groups
+    .map((group) => ({ ...group, items: group.items.filter((item) => normalize(item.label).includes(q)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <>
-      <div className="absolute inset-0 bg-main-light/25 dark:bg-main-dark/30 backdrop-blur-lg z-10" />
-      <div className="fixed inset-0 flex items-center justify-center z-20">
-
-        <div className="relative p-8 mx-8 w-100 lg:w-150 rounded-4xl bg-main-light dark:bg-main-dark border border-amethyst dark:border-grape z-15">
+      <div className="absolute inset-0 bg-main-light/25 dark:bg-main-dark/30 backdrop-blur-lg z-10" onClick={() => setShow(false)} />
+      <div className="fixed inset-0 flex items-center justify-center z-20 pointer-events-none">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={TITLE_ID}
+          className="relative pointer-events-auto flex flex-col max-h-[85vh] p-8 mx-4 w-full max-w-3xl rounded-4xl bg-main-light dark:bg-main-dark border border-amethyst dark:border-grape"
+        >
           <button type="button" aria-label="Cerrar" onClick={() => setShow(false)} className="absolute top-0 right-0 h-6 w-6 mt-7 mr-7 flex items-center justify-center cursor-pointer">
             <span className="absolute w-6 h-0.5 rounded-full rotate-45 bg-main-dark/35" />
             <span className="absolute w-6 h-0.5 rounded-full -rotate-45 bg-main-dark/35" />
           </button>
 
-          <h1 className="text-center text-2xl">{title}</h1>
-          <p className="text-xs text-center xs:text-sm lg:text-lg mt-4 mb-2">{description}</p>
+          <h1 id={TITLE_ID} className="text-center text-2xl">Señas soportadas</h1>
+          <p className="text-xs text-center xs:text-sm lg:text-base mt-3 mb-3">
+            Si una seña no se detecta, repítela con calma, con buena luz y con las manos dentro de la imagen.
+          </p>
 
-          <div className='grid grid-cols-2 lg:grid-cols-3 pt-4'>
-            {listOfItems.map((item, index) => (
-              <div key={index} className='flex justify-end items-center not-first:py-2 space-x-2'>
-                <span className='text-xs lg:text-base'>{item.itemTitle}</span>
-              </div>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar una seña…"
+            aria-label="Buscar una seña"
+            className="w-full px-4 py-2 mb-4 rounded-lg border border-platinum dark:border-platinum/30 bg-transparent"
+          />
+
+          <div className="overflow-y-auto pr-1">
+            {visible.length === 0 && <p className="text-center text-gray-400 py-6">No hay señas que coincidan.</p>}
+            {visible.map((group) => (
+              <section key={group.key} className="mb-4">
+                <h2 className="text-amethyst dark:text-grape font-semibold mb-2">{group.label}</h2>
+                <ul className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-1">
+                  {group.items.map((item) => (
+                    <li key={item.id} className="text-sm lg:text-base">{item.label}</li>
+                  ))}
+                </ul>
+              </section>
             ))}
           </div>
-          <button type="button" onClick={() => setShow(false)} className="w-full px-4 py-2 text-main-light bg-amethyst dark:bg-grape rounded-lg mt-8 cursor-pointer">¡Entendido!</button>
+
+          <button type="button" onClick={() => setShow(false)} className="w-full px-4 py-2 text-main-light bg-amethyst dark:bg-grape rounded-lg mt-4 cursor-pointer">¡Entendido!</button>
         </div>
       </div>
     </>
-  )
+  );
 }
-
-const supportedSignsInfo = {
-  title: "Señas soportadas",
-  description: "Estas son las señas que la app reconoce. Si una no se detecta, repítela con calma, con buena luz y con las manos dentro de la imagen.",
-  listOfItems: Object.values(WORDS_TEXT).map((text) => ({ itemTitle: text.replace(/[¿?]/g, '') })),
-};

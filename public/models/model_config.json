@@ -26,5 +26,85 @@
     "por-favor",
     "sordo",
     "sin-sena"
-  ]
+  ],
+  "vocabulary": {
+    "adios": {
+      "display": "Adiós",
+      "category": "saludos"
+    },
+    "bien": {
+      "display": "Bien",
+      "category": "respuestas"
+    },
+    "bienvenido": {
+      "display": "Bienvenido",
+      "category": "saludos"
+    },
+    "buenas-noches": {
+      "display": "Buenas noches",
+      "category": "saludos"
+    },
+    "buenas-tardes": {
+      "display": "Buenas tardes",
+      "category": "saludos"
+    },
+    "buenos-dias": {
+      "display": "Buenos días",
+      "category": "saludos"
+    },
+    "como-estas": {
+      "display": "¿Cómo estás?",
+      "category": "saludos"
+    },
+    "con-gusto": {
+      "display": "Con gusto",
+      "category": "cortesia"
+    },
+    "feliz-cumpleanos": {
+      "display": "Feliz cumpleaños",
+      "category": "saludos"
+    },
+    "gracias": {
+      "display": "Gracias",
+      "category": "cortesia"
+    },
+    "hola": {
+      "display": "Hola",
+      "category": "saludos"
+    },
+    "lo-siento": {
+      "display": "Lo siento",
+      "category": "cortesia"
+    },
+    "mal": {
+      "display": "Mal",
+      "category": "respuestas"
+    },
+    "mas-o-menos": {
+      "display": "Más o menos",
+      "category": "respuestas"
+    },
+    "perdon": {
+      "display": "Perdón",
+      "category": "cortesia"
+    },
+    "permiso": {
+      "display": "Permiso",
+      "category": "cortesia"
+    },
+    "por-favor": {
+      "display": "Por favor",
+      "category": "cortesia"
+    },
+    "sordo": {
+      "display": "Sordo",
+      "category": "otros"
+    }
+  },
+  "categories": {
+    "saludos": "Saludos y despedidas",
+    "cortesia": "Cortesía",
+    "respuestas": "Respuestas y estados",
+    "otros": "Otras"
+  }
 }

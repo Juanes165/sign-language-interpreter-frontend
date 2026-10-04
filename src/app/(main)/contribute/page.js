@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { displayText, groupByCategory, vocabularySize } from '@/lib/vocabulary';
 
 // Importación dinámica para evitar SSR con MediaPipe
 const GestureCapture = dynamic(
   () => import('@/components/contribute/GestureCapture'),
-  { 
+  {
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center min-h-screen">
@@ -19,47 +20,96 @@ const GestureCapture = dynamic(
   }
 );
 
-// Lista de gestos disponibles para contribuir (LISTA FIJA) - 18 gestos
-const AVAILABLE_GESTURES = [
-  { id: 'mal', label: 'Mal', description: 'Respuesta negativa', emoji: '👎' },
-  { id: 'hola', label: 'Hola', description: 'Saludo básico', emoji: '👋' },
-  { id: 'lo-siento', label: 'Lo siento', description: 'Disculpa formal', emoji: '😔' },
-  { id: 'sordo', label: 'Sordo', description: 'Persona sorda', emoji: '👂' },
-  { id: 'mas-o-menos', label: 'Más o menos', description: 'Respuesta neutral', emoji: '🤷' },
-  { id: 'bien', label: 'Bien', description: 'Respuesta positiva', emoji: '👍' },
-  { id: 'buenas-tardes', label: 'Buenas tardes', description: 'Saludo vespertino', emoji: '🌤️' },
-  { id: 'adios', label: 'Adiós', description: 'Despedida', emoji: '👋' },
-  { id: 'feliz-cumpleanos', label: 'Feliz cumpleaños', description: 'Celebración', emoji: '🎂' },
-  { id: 'gracias', label: 'Gracias', description: 'Agradecimiento', emoji: '🙏' },
-  { id: 'buenas-noches', label: 'Buenas noches', description: 'Saludo nocturno', emoji: '🌙' },
-  { id: 'como-estas', label: '¿Cómo estás?', description: 'Pregunta de cortesía', emoji: '🤔' },
-  { id: 'permiso', label: 'Permiso', description: 'Solicitud de paso', emoji: '🚶' },
-  { id: 'buenos-dias', label: 'Buenos días', description: 'Saludo matutino', emoji: '☀️' },
-  { id: 'bienvenido', label: 'Bienvenido', description: 'Dar la bienvenida', emoji: '🤗' },
-  { id: 'perdon', label: 'Perdón', description: 'Pedir disculpas', emoji: '🙇' },
-  { id: 'por-favor', label: 'Por favor', description: 'Solicitud cortés', emoji: '🥺' },
-  { id: 'con-gusto', label: 'Con gusto', description: 'Respuesta amable', emoji: '😊' },
-];
+// La lista de señas sale de public/models/model_config.json (vocabulario único del modelo).
+// Aquí solo se guardan los emojis decorativos; una seña nueva sin emoji usa el genérico.
+const EMOJIS = {
+  'mal': '👎', 'hola': '👋', 'lo-siento': '😔', 'sordo': '👂', 'mas-o-menos': '🤷', 'bien': '👍',
+  'buenas-tardes': '🌤️', 'adios': '👋', 'feliz-cumpleanos': '🎂', 'gracias': '🙏', 'buenas-noches': '🌙',
+  'como-estas': '🤔', 'permiso': '🚶', 'buenos-dias': '☀️', 'bienvenido': '🤗', 'perdon': '🙇',
+  'por-favor': '🥺', 'con-gusto': '😊',
+};
+const DEFAULT_EMOJI = '🤟';
+
+// Clase de rechazo: grabar movimientos reales que NO son señas enseña al modelo a no inventar palabras.
+const NEGATIVE_GESTURE = {
+  id: 'sin-sena',
+  label: 'No es una seña',
+  description: 'Mueve las manos como lo harías normalmente, sin hacer ninguna seña',
+  emoji: '🙌',
+};
+
+function toGesture(config, item, categoryLabel) {
+  return {
+    id: item.id,
+    label: displayText(config, item.id),
+    description: categoryLabel,
+    emoji: EMOJIS[item.id] ?? DEFAULT_EMOJI,
+  };
+}
+
+function GestureButton({ gesture, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(gesture)}
+      className="p-4 border-2 border-platinum dark:border-platinum/20 rounded-lg hover:border-amethyst dark:hover:border-grape hover:bg-wisteria/20 dark:hover:bg-amethyst/20 transition-all duration-200 text-left group cursor-pointer"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-start gap-3">
+          <span className="text-3xl" aria-hidden="true">{gesture.emoji}</span>
+          <div>
+            <h3 className="text-lg font-semibold text-amethyst dark:text-grape group-hover:text-wisteria dark:group-hover:text-amethyst">
+              {gesture.label}
+            </h3>
+            <p className="text-sm text-main-dark dark:text-platinum/70">
+              {gesture.description}
+            </p>
+          </div>
+        </div>
+        <svg
+          className="w-6 h-6 text-platinum dark:text-platinum/50 group-hover:text-amethyst dark:group-hover:text-grape"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </button>
+  );
+}
 
 export default function ContributePage() {
   const [selectedGesture, setSelectedGesture] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [config, setConfig] = useState(null);
+  const [configError, setConfigError] = useState(false);
   const [userStats, setUserStats] = useState({
     totalContributions: 0,
     totalGestures: 0
   });
 
   useEffect(() => {
+    let cancelled = false;
+    fetch('/models/model_config.json')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data) => { if (!cancelled) setConfig(data); })
+      .catch(() => { if (!cancelled) setConfigError(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     setIsMounted(true);
-    
+
     // Calcular estadísticas del usuario desde localStorage
     const contributions = Object.keys(localStorage)
       .filter(k => k.startsWith('gesture_'))
       .map(k => JSON.parse(localStorage.getItem(k)));
-    
+
     const uniqueGestures = new Set(contributions.map(c => c.gesture));
-    
+
     setUserStats({
       totalContributions: contributions.length,
       totalGestures: uniqueGestures.size
@@ -88,6 +138,8 @@ export default function ContributePage() {
     );
   }
 
+  const groups = config ? groupByCategory(config) : [];
+
   return (
     <div className="mt-5 py-8 pb-4 lg:pb-8">
       <div className="max-w-7xl mx-auto px-12 md:px-20">
@@ -113,14 +165,14 @@ export default function ContributePage() {
                       ¡Gran trabajo!
                     </p>
                     <p className="text-sm text-main-dark dark:text-platinum/70">
-                      Has contribuido con <strong className="text-amethyst dark:text-grape">{userStats.totalContributions}</strong> muestras 
+                      Has contribuido con <strong className="text-amethyst dark:text-grape">{userStats.totalContributions}</strong> muestras
                       en <strong className="text-amethyst dark:text-grape">{userStats.totalGestures}</strong> gestos diferentes
                     </p>
                   </div>
                 </div>
               </div>
             )}
-            
+
             {/* Instrucciones */}
             <div className="bg-main-light dark:bg-main-dark border border-platinum dark:border-platinum/20 rounded-3xl shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-amethyst dark:text-grape mb-4">
@@ -135,19 +187,29 @@ export default function ContributePage() {
                 <li>Mantén el gesto hasta que termine la captura</li>
                 <li>Puedes grabar múltiples muestras del mismo gesto</li>
               </ol>
-              
+
               <div className="mt-6 space-y-3">
                 <div className="p-4 bg-wisteria/20 dark:bg-amethyst/20 border-l-4 border-wisteria dark:border-amethyst rounded">
                   <p className="text-sm text-main-dark">
-                    <strong className="text-amethyst dark:text-grape">💡 Consejo:</strong> Graba al menos 3-5 muestras de cada gesto 
+                    <strong className="text-amethyst dark:text-grape">💡 Consejo:</strong> Graba al menos 3-5 muestras de cada gesto
                     desde diferentes ángulos para mejorar la precisión del modelo.
                   </p>
                 </div>
-                
-                <div className="p-4 bg-amethyst/20 dark:bg-grape/20 border-l-4 border-amethyst dark:border-grape rounded">
+
+                {config && (
+                  <div className="p-4 bg-amethyst/20 dark:bg-grape/20 border-l-4 border-amethyst dark:border-grape rounded">
+                    <p className="text-sm text-main-dark dark:text-platinum/70">
+                      <strong className="text-amethyst dark:text-grape">📊 Objetivo:</strong> Grabemos todos los {vocabularySize(config)} gestos
+                      para tener un modelo completo y robusto.
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-4 bg-wisteria/20 dark:bg-amethyst/20 border-l-4 border-wisteria dark:border-amethyst rounded">
                   <p className="text-sm text-main-dark dark:text-platinum/70">
-                    <strong className="text-amethyst dark:text-grape">📊 Objetivo:</strong> Grabemos todos los {AVAILABLE_GESTURES.length} gestos 
-                    para tener un modelo completo y robusto.
+                    <strong className="text-amethyst dark:text-grape">🙌 También ayuda mucho:</strong> grabar la opción
+                    &quot;No es una seña&quot; (rascarte, acomodarte el cabello, gesticular al hablar). Así la app aprende
+                    a no confundir esos movimientos con una palabra.
                   </p>
                 </div>
               </div>
@@ -161,42 +223,39 @@ export default function ContributePage() {
             <h2 className="text-2xl font-semibold text-amethyst dark:text-grape mb-6">
               Selecciona un gesto para grabar
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {AVAILABLE_GESTURES.map((gesture) => (
-                <button
-                  key={gesture.id}
-                  onClick={() => handleGestureSelect(gesture)}
-                  className="p-4 border-2 border-platinum dark:border-platinum/20 rounded-lg hover:border-amethyst dark:hover:border-grape hover:bg-wisteria/20 dark:hover:bg-amethyst/20 transition-all duration-200 text-left group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">{gesture.emoji}</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-amethyst dark:text-grape group-hover:text-wisteria dark:group-hover:text-amethyst">
-                          {gesture.label}
-                        </h3>
-                        <p className="text-sm text-main-dark dark:text-platinum/70">
-                          {gesture.description}
-                        </p>
-                      </div>
-                    </div>
-                    <svg
-                      className="w-6 h-6 text-platinum dark:text-platinum/50 group-hover:text-amethyst dark:group-hover:text-grape"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </button>
-              ))}
-            </div>
+
+            {configError && (
+              <p role="alert" className="text-red-500">
+                No se pudo cargar la lista de señas. Recarga la página.
+              </p>
+            )}
+            {!config && !configError && (
+              <p className="text-main-dark dark:text-platinum/70">Cargando señas...</p>
+            )}
+
+            {groups.map((group) => (
+              <section key={group.key} className="mb-8">
+                <h3 className="text-lg font-semibold text-main-dark dark:text-platinum mb-3">{group.label}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {group.items.map((item) => (
+                    <GestureButton
+                      key={item.id}
+                      gesture={toGesture(config, item, group.label)}
+                      onSelect={handleGestureSelect}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+
+            {config && (
+              <section>
+                <h3 className="text-lg font-semibold text-main-dark dark:text-platinum mb-3">Ayuda al rechazo de movimientos</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <GestureButton gesture={NEGATIVE_GESTURE} onSelect={handleGestureSelect} />
+                </div>
+              </section>
+            )}
           </div>
         ) : (
           /* Componente de captura */
@@ -210,6 +269,7 @@ export default function ContributePage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -220,7 +280,7 @@ export default function ContributePage() {
               </svg>
               Volver a selección
             </button>
-            
+
             <GestureCapture
               gesture={selectedGesture}
               onBack={handleBackToSelection}
@@ -231,12 +291,13 @@ export default function ContributePage() {
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-main-dark dark:text-platinum/70">
           <p>
-            <strong>🔒 Privacidad y Seguridad:</strong> Los gestos grabados se almacenan remotamente y se utilizan 
-            exclusivamente para entrenar y mejorar nuestro modelo de reconocimiento de lenguaje de señas. 
-            <strong> No se capturan ni almacenan imágenes o videos de las personas.</strong> Solo se extraen y guardan 
-            coordenadas numéricas (keypoints) que representan la posición de las manos, rostro y cuerpo en el espacio 3D. 
-            Estas coordenadas son completamente anónimas y no contienen información personal identificable. 
-            Al contribuir, aceptas que estos datos técnicos sean utilizados únicamente para fines de investigación y 
+            <strong>🔒 Privacidad y Seguridad:</strong> Los gestos grabados se almacenan remotamente y se utilizan
+            exclusivamente para entrenar y mejorar nuestro modelo de reconocimiento de lenguaje de señas.
+            <strong> No se capturan ni almacenan imágenes o videos de las personas.</strong> Solo se extraen y guardan
+            coordenadas numéricas (keypoints) que representan la posición de las manos, rostro y cuerpo en el espacio 3D.
+            Cada navegador genera un identificador aleatorio (no contiene tu nombre ni ningún dato personal) que se
+            guarda junto a tus muestras solo para poder evaluar el modelo con personas distintas a las que lo entrenaron.
+            Al contribuir, aceptas que estos datos técnicos sean utilizados únicamente para fines de investigación y
             mejora del modelo de reconocimiento de lenguaje de señas.
           </p>
         </div>
